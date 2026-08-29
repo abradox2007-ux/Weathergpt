@@ -26,26 +26,15 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     console.error('WeatherGPT Uncaught Error:', error, errorInfo);
   }
 
-  handleReload = async () => {
-    try {
-      localStorage.clear();
-      sessionStorage.clear();
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (const registration of registrations) {
-          await registration.unregister();
-        }
-      }
-      if ('caches' in window) {
-        const keys = await caches.keys();
-        for (const key of keys) {
-          await caches.delete(key);
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    window.location.href = window.location.origin + '?refresh=' + Date.now();
+  handleReload = () => {
+    this.setState({ hasError: false, error: null });
+    window.location.reload();
+  };
+
+  handleReset = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.reload();
   };
 
   render() {
@@ -56,15 +45,28 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
             <span className="text-3xl">🌦️</span>
           </div>
           <h1 className="text-xl font-black mb-2">WeatherGPT</h1>
-          <p className="text-xs text-slate-400 mb-6 max-w-xs leading-relaxed">
-            A new version of WeatherGPT is ready. Tap below to launch the updated app.
+          <p className="text-xs text-slate-400 mb-4 max-w-xs leading-relaxed">
+            Application encountered an issue. Tap below to continue to the dashboard.
           </p>
-          <button
-            onClick={this.handleReload}
-            className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white font-black text-sm shadow-xl shadow-sky-500/30 transition-all active:scale-95"
-          >
-            Launch WeatherGPT
-          </button>
+          {this.state.error && (
+            <div className="text-[10px] text-rose-300 bg-rose-950/60 border border-rose-800/80 p-3 rounded-2xl max-w-xs overflow-auto text-left mb-6 font-mono break-words">
+              {this.state.error.message}
+            </div>
+          )}
+          <div className="flex flex-col space-y-2.5 w-full max-w-xs">
+            <button
+              onClick={this.handleReload}
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white font-black text-sm shadow-xl shadow-sky-500/30 transition-all active:scale-95"
+            >
+              Open WeatherGPT Dashboard
+            </button>
+            <button
+              onClick={this.handleReset}
+              className="w-full py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 font-bold text-xs transition-all"
+            >
+              Reset App Data & Re-onboard
+            </button>
+          </div>
         </div>
       );
     }
