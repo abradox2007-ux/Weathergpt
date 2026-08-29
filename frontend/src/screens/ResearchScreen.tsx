@@ -51,7 +51,7 @@ export const ResearchScreen: React.FC<ResearchScreenProps> = ({
 
   useEffect(() => {
     fetchMetrics(activeCategory);
-  }, [activeCategory, currentLat, currentLon]);
+  }, [activeCategory, currentLat, currentLon, language]);
 
   useEffect(() => {
     fetchHistorical(selectedRange);
@@ -60,7 +60,7 @@ export const ResearchScreen: React.FC<ResearchScreenProps> = ({
   const fetchMetrics = async (cat: string) => {
     setLoading(true);
     try {
-      const res = await api.getResearchMetrics(cat, currentLat, currentLon);
+      const res = await api.getResearchMetrics(cat, currentLat, currentLon, language);
       setMetrics(res.metrics || []);
     } catch (e) {
       console.error(e);
@@ -171,7 +171,7 @@ export const ResearchScreen: React.FC<ResearchScreenProps> = ({
                 {/* Plain-Language Tooltip Expandable */}
                 {isTooltipOpen && (
                   <div className="mt-2.5 p-3 rounded-2xl bg-sky-500/10 dark:bg-sky-950/50 border border-sky-200 dark:border-sky-800/80 text-xs text-sky-950 dark:text-sky-200 font-medium animate-in fade-in">
-                    <span className="font-black text-sky-700 dark:text-sky-300">Plain Explanation: </span>
+                    <span className="font-black text-sky-700 dark:text-sky-300">{getTranslation(language, 'plain_explanation')}: </span>
                     {m.plain_tooltip}
                   </div>
                 )}

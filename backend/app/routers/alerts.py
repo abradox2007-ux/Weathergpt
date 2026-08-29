@@ -47,8 +47,10 @@ async def get_alert_precautions(
     alert_id: str,
     alert_type: Optional[str] = Query(default="cyclone"),
     severity: Optional[str] = Query(default="warning"),
+    lang: Optional[str] = Query(default=None),
     auth: Dict[str, Any] = Depends(require_auth)
 ):
+    selected_lang = lang or auth.get("language_code", "en")
     data = translation_service.get_precautions(alert_type)
     return AlertPrecautionsResponse(
         alert_id=alert_id,

@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { api } from '../api/client';
 import { AlertItem } from '../types';
-import { getTranslation } from '../i18n/translations';
+import { getTranslation, translatePrecaution, translateEmergencyContact } from '../i18n/translations';
 
 interface DisasterScreenProps {
   currentLat: number;
@@ -43,7 +43,7 @@ export const DisasterScreen: React.FC<DisasterScreenProps> = ({
   const fetchAlerts = async () => {
     setLoading(true);
     try {
-      const res = await api.getActiveAlerts(currentLat, currentLon);
+      const res = await api.getActiveAlerts(currentLat, currentLon, language);
       setAlerts(res.alerts || []);
       if (res.alerts && res.alerts.length > 0) {
         setSelectedAlert(res.alerts[0]);
@@ -61,7 +61,7 @@ export const DisasterScreen: React.FC<DisasterScreenProps> = ({
 
   const loadPrecautions = async (alert: AlertItem) => {
     try {
-      const p = await api.getAlertPrecautions(alert.id, alert.alert_type, alert.severity);
+      const p = await api.getAlertPrecautions(alert.id, alert.alert_type, alert.severity, language);
       setPrecautions(p);
     } catch (e) {
       console.error(e);
@@ -70,7 +70,7 @@ export const DisasterScreen: React.FC<DisasterScreenProps> = ({
 
   const loadGeneralPrecautions = async () => {
     try {
-      const p = await api.getAlertPrecautions('general', 'general', 'advisory');
+      const p = await api.getAlertPrecautions('general', 'general', 'advisory', language);
       setPrecautions(p);
     } catch (e) {
       console.error(e);
@@ -151,7 +151,7 @@ export const DisasterScreen: React.FC<DisasterScreenProps> = ({
                         : 'bg-sky-600 text-white'
                     }`}
                   >
-                    {a.severity}
+                    {getTranslation(language, a.severity)}
                   </span>
                 </div>
 
@@ -163,7 +163,7 @@ export const DisasterScreen: React.FC<DisasterScreenProps> = ({
                     <span>{formatTimeWindow(a.valid_from, a.valid_to)}</span>
                   </div>
                   <span className="text-[10px] uppercase font-bold text-slate-400">
-                    Source: {a.source.toUpperCase()}
+                    {getTranslation(language, 'source')}: {a.source.toUpperCase()}
                   </span>
                 </div>
               </div>
@@ -193,7 +193,7 @@ export const DisasterScreen: React.FC<DisasterScreenProps> = ({
             {precautions?.dos.map((item, idx) => (
               <div key={idx} className="flex items-start space-x-2.5 text-xs text-slate-700 dark:text-slate-300 font-medium">
                 <span className="text-emerald-500 font-black shrink-0 mt-0.5">•</span>
-                <span className="leading-snug">{item}</span>
+                <span className="leading-snug">{translatePrecaution(item, language)}</span>
               </div>
             ))}
           </div>
@@ -209,7 +209,7 @@ export const DisasterScreen: React.FC<DisasterScreenProps> = ({
             {precautions?.donts.map((item, idx) => (
               <div key={idx} className="flex items-start space-x-2.5 text-xs text-slate-700 dark:text-slate-300 font-medium">
                 <span className="text-rose-500 font-black shrink-0 mt-0.5">•</span>
-                <span className="leading-snug">{item}</span>
+                <span className="leading-snug">{translatePrecaution(item, language)}</span>
               </div>
             ))}
           </div>
@@ -230,7 +230,9 @@ export const DisasterScreen: React.FC<DisasterScreenProps> = ({
               href={`tel:${c.number}`}
               className="p-3 rounded-2xl bg-sky-50/70 dark:bg-slate-800/80 border border-sky-100 dark:border-slate-700 hover:border-sky-300 dark:hover:border-sky-500 flex flex-col justify-between transition-colors shadow-xs group"
             >
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate">{c.label}</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate">
+                {translateEmergencyContact(c.label, language)}
+              </span>
               <span className="text-sm sm:text-base font-black text-sky-700 dark:text-sky-400 mt-1 group-hover:text-sky-600">{c.number}</span>
             </a>
           ))}

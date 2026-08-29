@@ -147,6 +147,8 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
           <div className="space-y-2.5 max-h-[52vh] overflow-y-auto pr-1">
             {PROFESSIONS.map((p) => {
               const isSelected = selectedProf === p.id;
+              const pName = getProfessionName(p.id, selectedLang);
+              const pDesc = getProfessionDesc(p.id, selectedLang);
               return (
                 <button
                   key={p.id}
@@ -162,10 +164,10 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-black text-slate-900 dark:text-white">{p.name}</span>
+                      <span className="text-sm font-black text-slate-900 dark:text-white">{pName}</span>
                       {isSelected && <CheckCircle2 className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />}
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">{p.desc}</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">{pDesc}</p>
                   </div>
                 </button>
               );

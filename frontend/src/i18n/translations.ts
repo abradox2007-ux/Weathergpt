@@ -21,7 +21,13 @@ export const LANGUAGES: LanguageMeta[] = [
   { code: 'as', name: 'Assamese', native: 'অসমীয়া', greeting: 'নমস্কাৰ' },
 ];
 
-export const PROFESSIONS = [
+export interface ProfessionMeta {
+  id: string;
+  name: string;
+  desc: string;
+}
+
+export const PROFESSIONS: ProfessionMeta[] = [
   { id: 'farmer', name: 'Farmer', desc: 'Crop advisory, soil moisture, irrigation & pest alerts' },
   { id: 'fisherman', name: 'Fisherman', desc: 'Sea swell, coastal wind speed, high sea warnings & harbor tides' },
   { id: 'aviation', name: 'Aviation', desc: 'METAR, cloud ceiling, VFR visibility & crosswind turbulence' },
@@ -30,8 +36,216 @@ export const PROFESSIONS = [
   { id: 'general', name: 'General Public', desc: 'Daily commute comfort, UV protection, rain radar & air quality' },
 ];
 
+export const PROFESSION_TRANSLATIONS: Record<string, { name: Record<string, string>; desc: Record<string, string> }> = {
+  farmer: {
+    name: {
+      en: "Farmer",
+      hi: "किसान",
+      ta: "விவசாயி",
+      te: "రైతు",
+      bn: "কৃষক",
+      mr: "शेतकरी",
+      gu: "ખેડૂત",
+      kn: "ರೈತ",
+      ml: "കർഷകൻ",
+      or: "କୃଷକ",
+      pa: "ਕਿਸਾਨ",
+      as: "কৃষক",
+      ur: "کسان"
+    },
+    desc: {
+      en: "Crop advisory, soil moisture, irrigation & pest alerts",
+      hi: "फसल सलाह, मिट्टी की नमी, सिंचाई और कीट चेतावनी",
+      ta: "பயிர் ஆலோசனை, மண் ஈரப்பதம், நீர்ப்பாசனம் & பூச்சி எச்சரிக்கைகள்",
+      te: "పంట సలహాలు, నేల తేమ, నీటిపారుదల & తెగుళ్ల హెచ్చరికలు",
+      bn: "ফসলের পরামর্শ, মাটির আর্দ্রতা, সেচ ও কীট সতর্কতা",
+      mr: "पीक सल्ला, मातीतील ओलावा, सिंचन आणि कीटक इशारे",
+      gu: "પાક સલાહ, જમીનમાં ભેજ, સિંચાઈ અને જંતુ ચેતવણી",
+      kn: "ಬೆಳೆ ಸಲಹೆ, ಮಣ್ಣಿನ ತೇವಾಂಶ, ನೀರಾವರಿ & ಕೀಟ ಎಚ್ಚರಿಕೆಗಳು",
+      ml: "വിള ഉപദേശം, മണ്ണിലെ ഈർപ്പം, ജലസേചനം & കീട മുന്നറിയിപ്പുകൾ",
+      or: "ଫସଲ ପରାମର୍ଶ, ମାଟିର ଆର୍ଦ୍ରତା, ଜଳସେଚନ ଓ କୀଟ ସତର୍କତା",
+      pa: "ਫ਼ਸਲ ਸਲਾਹ, ਮਿੱਟੀ ਦੀ ਨਮੀ, ਸਿੰਚਾਈ ਅਤੇ ਕੀੜੇ-ਮਕੌੜੇ ਚੇਤਾਵਨੀਆਂ",
+      as: "শস্য পৰামৰ্শ, মাটিৰ আৰ্দ্ৰতা, জলসিঞ্চন আৰু কীট সতৰ্কতা",
+      ur: "فصل کا مشورہ، مٹی کی نمی، آبپاشی اور کیڑوں کی وارننگ"
+    }
+  },
+  fisherman: {
+    name: {
+      en: "Fisherman",
+      hi: "मछुआरा",
+      ta: "மீனவர்",
+      te: "మత్స్యకారుడు",
+      bn: "জেলে",
+      mr: "कोळी / मच्छीमार",
+      gu: "માછીમાર",
+      kn: "ಮೀನುಗಾರ",
+      ml: "മത്സ്യത്തൊഴിലാളി",
+      or: "ମତ୍ସ୍ୟଜୀବୀ",
+      pa: "ਮਛੇਰਾ",
+      as: "মৎস্যজীবী",
+      ur: "ماہی گیر"
+    },
+    desc: {
+      en: "Sea swell, coastal wind speed, high sea warnings & harbor tides",
+      hi: "समुद्री लहरें, तटीय हवा की गति, गहरे समुद्र की चेतावनी और बंदरगाह ज्वार",
+      ta: "கடல் அலைகள், காற்றின் வேகம், ஆழ்கடல் எச்சரிக்கைகள் & துறைமுக அலைகள்",
+      te: "సముద్ర అలలు, తీర గాలుల వేగం, హెచ్చరికలు & పోర్ట్ టైడ్స్",
+      bn: "সমুদ্রের ঢেউ, বাতাসের গতি, গভীর সমুদ্রের সতর্কতা ও জোয়ার-ভাটা",
+      mr: "समुद्रातील लाटा, वाऱ्याचा वेग, खोल समुद्रातील धोके व भरती-ओहोटी",
+      gu: "દરિયાઈ મોજા, પવનની ગતિ, દરિયાઈ ચેતવણીઓ અને બંદર ભરતી",
+      kn: "ಸಮುದ್ರದ ಅಲೆಗಳು, ಗಾಳಿಯ ವೇಗ, ಎಚ್ಚರಿಕೆಗಳು ಮತ್ತು ಬಂದರು ಉಬ್ಬರವಿಳಿತ",
+      ml: "കടൽക്ഷോഭം, കാറ്റിന്റെ വേഗത, മുന്നറിയിപ്പുകൾ & വേലിയേറ്റ സമയം",
+      or: "ସମୁଦ୍ର ଢେଉ, ପବନ ବେଗ, ସତର୍କତା ଏବଂ ବନ୍ଦର ଜୁଆର",
+      pa: "ਸਮੁੰਦਰੀ ਲਹਿਰਾਂ, ਹਵਾ ਦੀ ਰਫ਼ਤਾਰ, ਚੇਤਾਵਨੀਆਂ ਅਤੇ ਬੰਦਰਗਾਹ ਦਾ ਉਤਰਾਅ-ਚੜ੍ਹਾਅ",
+      as: "সাগৰৰ ঢৌ, বতাহৰ গতি, সাগৰীয় সতৰ্কবাৰ্তা আৰু বন্দৰৰ জোৱাৰ",
+      ur: "سمندری لہریں، ہوا کی رفتار، گہرے سمندر کی وارننگ اور بندرگاہ کا اتار چڑھاؤ"
+    }
+  },
+  aviation: {
+    name: {
+      en: "Aviation",
+      hi: "विमानन",
+      ta: "விமானப் போக்குவரத்து",
+      te: "విమానయానం",
+      bn: "বিমানচালনা",
+      mr: "विमान वाहतूक",
+      gu: "વિમાન વ્યવહાર",
+      kn: "ವಾಯುಯಾನ",
+      ml: "വ്യോമയാനം",
+      or: "ବିମାନ ଚଳାଚଳ",
+      pa: "ਹਵਾਬਾਜ਼ੀ",
+      as: "বিমান পৰিবহণ",
+      ur: "ہوابازی"
+    },
+    desc: {
+      en: "METAR, cloud ceiling, VFR visibility & crosswind turbulence",
+      hi: "METAR, बादलों की ऊंचाई, VFR दृश्यता और विक्षोभ",
+      ta: "METAR, மேக உச்ச வரம்பு, VFR பார்வைத் தூரம் & காற்று கொந்தளிப்பு",
+      te: "METAR, క్లౌడ్ సీలింగ్, VFR దృశ్యమానత & టర్బులెన్స్",
+      bn: "METAR, মেঘের স্তর, VFR দৃশ্যমানতা ও অশান্ত বায়ু",
+      mr: "METAR, ढगांची उंची, VFR दृश्यमानता आणि हवेतील विक्षोभ",
+      gu: "METAR, વાદળોની ઊંચાઈ, VFR દૃશ્યતા અને ટર્બ્યુલન્સ",
+      kn: "METAR, ಮೋಡದ ಎತ್ತರ, VFR ಗೋಚರತೆ & ಟರ್ಬುಲೆನ್ಸ್",
+      ml: "METAR, മേഘത്തിന്റെ ഉയരം, VFR ദൃശ്യപരത & കാറ്റിന്റെ പ്രക്ഷുബ്ധത",
+      or: "METAR, ମେଘର ଉଚ୍ଚତା, VFR ଦୃଶ୍ୟମାନତା ଏବଂ ବାୟୁ ବିକ୍ଷୋଭ",
+      pa: "METAR, ਬੱਦਲਾਂ ਦੀ ਉਚਾਈ, VFR ਦਿੱਖ ਅਤੇ ਹਵਾ ਦਾ ਵਹਾਅ",
+      as: "METAR, ডাৱৰৰ উচ্চতা, VFR দৃশ্যমানতা আৰু বায়ুৰ অস্থিৰতা",
+      ur: "METAR، بادلوں کی اونچائی، VFR حد نگاہ اور ہوا کا دباؤ"
+    }
+  },
+  marine: {
+    name: {
+      en: "Marine & Port",
+      hi: "समुद्री और बंदरगाह",
+      ta: "கடல் & துறைமுகம்",
+      te: "సముద్ర & పోర్ట్",
+      bn: "সামুদ্রিক ও বন্দর",
+      mr: "सागरी आणि बंदर",
+      gu: "દરિયાઈ અને બંદર",
+      kn: "ಸಾಗರ & ಬಂದರು",
+      ml: "മാരിടൈം & പോർട്ട്",
+      or: "ସାମୁଦ୍ରିକ ଓ ବନ୍ଦର",
+      pa: "ਸਮੁੰਦਰੀ ਅਤੇ ਬੰਦਰਗਾਹ",
+      as: "সামুদ্ৰিক আৰু বন্দৰ",
+      ur: "بحری اور بندرگاہ"
+    },
+    desc: {
+      en: "Vessel transit, deep sea currents & monsoon depression analysis",
+      hi: "जहाज पारगमन, गहरे समुद्र की धाराएं और मानसूनी दबाव",
+      ta: "கப்பல் போக்குவரத்து, ஆழ்கடல் நீரோட்டங்கள் & பருவமழை காற்றழுத்த தாழ்வு நிலை",
+      te: "నౌకాయానం, లోతైన సముద్ర ప్రవాహాలు & రుతుపవన వాయుగుండం విశ్లేషణ",
+      bn: "জাহাজ চলাচল, গভীর সমুদ্রের স্রোত এবং মৌসুমি নিম্নচাপ",
+      mr: "जहाज वाहतूक, खोल समुद्रातील प्रवाह आणि मान्सून कमी दाबाचा पट्टा",
+      gu: "જહાજ પરિવહન, ઊંડા સમુદ્રના પ્રવાહો અને ચોમાસાનું દબાણ",
+      kn: "ಹಡಗು ಸಾರಿಗೆ, ಆಳ ಸಮುದ್ರದ ಪ್ರವಾಹಗಳು & ಮುಂಗಾರು ವಾಯುಭಾರ ಕುಸಿತ",
+      ml: "കപ്പൽ ഗതാഗതം, ആഴക്കടൽ ഒഴുക്ക് & മൺസൂൺ ന്യൂനമർദ്ദം",
+      or: "ଜାହାଜ ଚଳାଚଳ, ଗଭୀର ସମୁଦ୍ର ସ୍ରୋତ ଏବଂ ମୌସୁମୀ ନିମ୍ନଚାପ",
+      pa: "ਜਹਾਜ਼ ਆਵਾਜਾਈ, ਡੂੰਘੇ ਸਮੁੰਦਰ ਦੇ ਵਹਾਅ ਅਤੇ ਮਾਨਸੂਨ ਘੱਟ ਦਬਾਅ",
+      as: "জাহাজ চলাচল, গভীৰ সাগৰৰ সোঁত আৰু বাৰিষাৰ নিম্নচাপ",
+      ur: "جہاز رانی، گہرے سمندر کے بہاؤ اور مانسون کے کم دباؤ کا تجزیہ"
+    }
+  },
+  urban_planning: {
+    name: {
+      en: "Urban Planning",
+      hi: "नगर नियोजन",
+      ta: "நகர திட்டமிடல்",
+      te: "పట్టణ ప్రణాళిక",
+      bn: "নগর পরিকল্পনা",
+      mr: "नगररचना",
+      gu: "શહેરી આયોજન",
+      kn: "ನಗರ ಯೋಜನೆ",
+      ml: "നഗരാസൂത്രണം",
+      or: "ନଗର ଯୋଜନା",
+      pa: "ਸ਼ਹਿਰੀ ਯੋਜਨਾਬੰਦੀ",
+      as: "নগৰ পৰিকল্পনা",
+      ur: "شہری منصوبہ بندی"
+    },
+    desc: {
+      en: "Drainage flooding risks, urban heat island & infrastructure",
+      hi: "जल निकासी, बाढ़ जोखिम, शहरी गर्मी और बुनियादी ढांचा",
+      ta: "வடிகால் வெள்ள அபாயங்கள், நகர்ப்புற வெப்ப தீவு & உள்கட்டமைப்பு",
+      te: "డ్రైనేజీ వరద ప్రమాదాలు, అర్బన్ హీట్ ఐలాండ్ & మౌలిక వసతులు",
+      bn: "নিকাশী ও বন্যার ঝুঁকি, শহুরে তাপ এবং পরিকাঠামো",
+      mr: "पाण्याचा निचरा, पूर जोखीम, शहरी उष्णता आणि पायाभूत सुविधा",
+      gu: "ડ્રેનેજ પૂર જોખમો, શહેરી ગરમી અને ઈન્ફ્રાસ્ટ્રક્ચર",
+      kn: "ಚರಂಡಿ ಪ್ರವಾಹದ ಅಪಾಯಗಳು, ನಗರ ಶಾಖ & ಮೂಲಸೌಕರ್ಯ",
+      ml: "ഡ്രെയിനേജ് വെള്ളപ്പൊക്ക സാധ്യതകൾ, നഗര താപം & അടിസ്ഥാന സൗകര്യങ്ങൾ",
+      or: "ନିଷ୍କାସନ ବନ୍ୟା ବିପଦ, ସହରୀ ଉତ୍ତାପ ଏବଂ ଭିତ୍ତିଭୂମି",
+      pa: "ਨਿਕਾਸੀ ਹੜ੍ਹ ਖਤਰੇ, ਸ਼ਹਿਰੀ ਗਰਮੀ ਅਤੇ ਬੁਨਿਆਦੀ ਢਾਂਚਾ",
+      as: "নলা-নৰ্দমাৰ বানপানীৰ আশংকা, নগৰীয়া উত্তাপ আৰু আন্তঃগাঁথনি",
+      ur: "سیوریج، سیلاب کے خطرات، شہری گرمی اور بنیادی ڈھانچہ"
+    }
+  },
+  general: {
+    name: {
+      en: "General Public",
+      hi: "आम नागरिक",
+      ta: "பொதுமக்கள்",
+      te: "సాధారణ ప్రజలు",
+      bn: "সাধারণ মানুষ",
+      mr: "सर्वसामान्य नागरिक",
+      gu: "સામાન્ય નાગરિક",
+      kn: "ಸಾಮಾನ್ಯ ಸಾರ್ವಜನಿಕರು",
+      ml: "പൊതുജനങ്ങൾ",
+      or: "ସାଧାରଣ ଜନତା",
+      pa: "ਆਮ ਲੋਕ",
+      as: "সাধাৰণ ৰাইজ",
+      ur: "عام لوگ"
+    },
+    desc: {
+      en: "Daily commute comfort, UV protection, rain radar & air quality",
+      hi: "दैनिक आवागमन, यूवी सुरक्षा, वर्षा रडार और वायु गुणवत्ता",
+      ta: "தினசரி பயணம், UV பாதுகாப்பு, மழை ரேடார் & காற்று தரம்",
+      te: "రోజువారీ ప్రయాణం, UV రక్షణ, వర్షపు రాడార్ & గాలి నాణ్యత",
+      bn: "দৈনিক যাতায়াত, ইউভি সুরক্ষা, বৃষ্টি রাডার ও বায়ুর মান",
+      mr: "दैनिक प्रवास, यूव्ही संरक्षण, पाऊस रडार आणि हवेची गुणवत्ता",
+      gu: "દૈનિક પ્રવાસ, યુવી રક્ષણ, વરસાદ રડાર અને હવાની ગુણવત્તા",
+      kn: "ದೈನಂದಿನ ಪ್ರಯಾಣ, ಯುವಿ ರಕ್ಷಣೆ, ಮಳೆ ರಾಡಾರ್ & ಗಾಳಿಯ ಗುಣಮಟ್ಟ",
+      ml: "യാത്രാ സുഖം, യുവി സംരക്ഷണം, മഴ റഡാർ & വായു ഗുണനിലവാരം",
+      or: "ଦୈନନ୍ଦିନ ଯାତାୟାତ, ୟୁଭି ସୁରକ୍ଷା, ବର୍ଷା ରାଡାର ଓ ବାୟୁ ମାନ",
+      pa: "ਰੋਜ਼ਾਨਾ ਸਫ਼ਰ, ਯੂਵੀ ਸੁਰੱਖਿਆ, ਮੀਂਹ ਦਾ ਰਡਾਰ ਅਤੇ ਹਵਾ ਗੁਣਵੱਤਾ",
+      as: "দৈনন্দিন যাতায়াত, ইউভি সুৰক্ষা, বৰষুণ ৰাডাৰ আৰু বায়ুৰ গুণমান",
+      ur: "روزمرہ آمدورفت، یو وی تحفظ، بارش کا ریڈار اور ہوا کا معیار"
+    }
+  }
+};
+
+export const getProfessionName = (id: string, lang: string): string => {
+  const prof = PROFESSION_TRANSLATIONS[id];
+  if (!prof) return id;
+  return prof.name[lang] || prof.name['en'] || id;
+};
+
+export const getProfessionDesc = (id: string, lang: string): string => {
+  const prof = PROFESSION_TRANSLATIONS[id];
+  if (!prof) return '';
+  return prof.desc[lang] || prof.desc['en'] || '';
+};
+
 export const CONDITION_TRANSLATIONS: Record<string, Record<string, string>> = {
   "Clear Sky": { hi: "साफ आसमान", ta: "தெளிவான வானம்", te: "నిర్మలమైన ఆకాశం", bn: "পরিষ্কার আকাশ", mr: "निरभ्र आकाश", gu: "ચોખ્ખું આકાશ", kn: "ಸ್ವಚ್ಛ ಆಕಾಶ", ml: "തെളിഞ്ഞ ആകാശം", pa: "ਸਾਫ਼ ਅਸਮਾਨ", or: "ନିର୍ମଳ ଆକାଶ", as: "পৰিষ্কাৰ আকাশ", ur: "صاف آسمان" },
+  "Clear": { hi: "साफ", ta: "தெளிவு", te: "నిర్మలం", bn: "পরিষ্কার", mr: "निरभ्र", gu: "ચોખ્ખું", kn: "ಸ್ವಚ್ಛ", ml: "തെളിഞ്ഞത്", pa: "ਸਾਫ਼", or: "ନିର୍ମଳ", as: "পৰিষ্কাৰ", ur: "صاف" },
   "Mainly Clear": { hi: "मुख्यतः साफ", ta: "பெரும்பாலும் தெளிவு", te: "ప్రధానంగా నిర్మలం", bn: "বেশিরভাগ পরিষ্কার", mr: "मुख्यतः निरभ्र", gu: "મુખ્યત્વે ચોખ્ખું", kn: "ಹೆಚ್ಚಾಗಿ ಸ್ವಚ್ಛ", ml: "പ്രധാനമായും തെളിഞ്ഞത്", pa: "ਜ਼ਿਆਦਾਤਰ ਸਾਫ਼", or: "ମୁଖ୍ୟତଃ ନିର୍ମଳ", as: "মূলতঃ পৰিষ্কাৰ", ur: "زیادہ تر صاف" },
   "Partly Cloudy": { hi: "आंशिक बादल", ta: "பகுதி மேகமூட்டம்", te: "పాక్షిక మేఘావృతం", bn: "আংশিক মেঘলা", mr: "अंशतः ढगाळ", gu: "અંશતઃ વાદળછાયું", kn: "ಭಾಗಶಃ ಮೋಡ", ml: "ഭാഗികമായി മേഘാവൃതം", pa: "ਅੰਸ਼ਕ ਬੱਦਲਵਾਈ", or: "ଆଂଶିକ ମେଘୁଆ", as: "আংশিক ডাৱৰীয়া", ur: "جزوی ابر آلود" },
   "Overcast": { hi: "घने बादल", ta: "முழு மேகமூட்டம்", te: "పూర్తి మేఘావృతం", bn: "মেঘলা আকাশ", mr: "पूर्ण ढगाळ", gu: "ઘાટા વાદળો", kn: "ದಟ್ಟ ಮೋಡ", ml: "പൂർണ്ണ മേഘാവൃതം", pa: "ਘਣੇ ਬੱਦਲ", or: "ସମ୍ପୂର୍ଣ୍ଣ ମେଘୁଆ", as: "ডাৱৰে আৱৰা", ur: "مکمل ابر آلود" },
@@ -73,6 +287,9 @@ export const UI_STRINGS: Record<string, Record<string, string>> = {
     active_profile: 'Active Profile',
     switch_category: 'Switch Operational Category',
     action_plan: 'Action Plan',
+    action_required: 'Action Required',
+    advisory_caution: 'Advisory Caution',
+    optimal_window: 'Optimal Window',
     active_alerts: 'Active Severe Alerts',
     no_active_alerts: 'No severe disaster alerts active in this district.',
     bulletins: 'Active Bulletins',
@@ -104,6 +321,15 @@ export const UI_STRINGS: Record<string, Record<string, string>> = {
     relaunch_onboarding: 'Re-launch Onboarding Setup',
     select_language: 'Select Your Preferred Language',
     select_profession: 'Select Your Profession',
+    display_language: 'Display & Assistant Language',
+    popular_hubs: 'Popular Indian Hubs',
+    use_live_gps: 'Use Current Live Location (GPS)',
+    install_app: 'Install App',
+    plain_explanation: 'Plain Explanation',
+    source: 'Source',
+    warning: 'Warning',
+    watch: 'Watch',
+    advisory: 'Advisory',
     next: 'Next',
     confirm: 'Confirm & Continue',
     stale_notice: 'Showing cached atmospheric data (offline telemetry fallback active).'
@@ -138,6 +364,9 @@ export const UI_STRINGS: Record<string, Record<string, string>> = {
     active_profile: 'सक्रिय प्रोफ़ाइल',
     switch_category: 'श्रेणी बदलें',
     action_plan: 'कार्य योजना',
+    action_required: 'कार्रवाई आवश्यक',
+    advisory_caution: 'सतर्कता सलाह',
+    optimal_window: 'अनुकूल समय',
     active_alerts: 'सक्रिय आपदा चेतावनी',
     no_active_alerts: 'इस क्षेत्र में कोई गंभीर आपदा चेतावनी सक्रिय नहीं है।',
     bulletins: 'सक्रिय मौसम बुलेटिन',
@@ -169,6 +398,15 @@ export const UI_STRINGS: Record<string, Record<string, string>> = {
     relaunch_onboarding: 'ऑनबोर्डिंग फिर से शुरू करें',
     select_language: 'अपनी पसंदीदा भाषा चुनें',
     select_profession: 'अपना व्यवसाय चुनें',
+    display_language: 'प्रदर्शन एवं सहायक भाषा',
+    popular_hubs: 'प्रमुख भारतीय शहर',
+    use_live_gps: 'लाइव जीपीएस स्थान का उपयोग करें',
+    install_app: 'ऐप इंस्टॉल करें',
+    plain_explanation: 'सरल व्याख्या',
+    source: 'स्रोत',
+    warning: 'चेतावनी',
+    watch: 'निगरानी',
+    advisory: 'सलाह',
     next: 'आगे बढ़ें',
     confirm: 'पुष्टि करें और शुरू करें',
     stale_notice: 'पिछला ज्ञात मौसम डेटा दिखाया जा रहा है।'
@@ -203,6 +441,9 @@ export const UI_STRINGS: Record<string, Record<string, string>> = {
     active_profile: 'தற்போதைய தொழில்',
     switch_category: 'தொழில் பிரிவை மாற்றுக',
     action_plan: 'செயல் திட்டம்',
+    action_required: 'நடவடிக்கை தேவை',
+    advisory_caution: 'எச்சரிக்கை ஆலோசனை',
+    optimal_window: 'சிறந்த நேரம்',
     active_alerts: 'செயலில் உள்ள எச்சரிக்கைகள்',
     no_active_alerts: 'தீவிர எச்சரிக்கைகள் எதுவும் இல்லை.',
     bulletins: 'வானிலை அறிவிப்புகள்',
@@ -234,6 +475,15 @@ export const UI_STRINGS: Record<string, Record<string, string>> = {
     relaunch_onboarding: 'தொடக்க அமைப்பை மீண்டும் இயக்கவும்',
     select_language: 'உங்கள் மொழியைத் தேர்ந்தெடுக்கவும்',
     select_profession: 'உங்கள் தொழிலைத் தேர்ந்தெடுக்கவும்',
+    display_language: 'காட்சி மற்றும் உதவியாளர் மொழி',
+    popular_hubs: 'முக்கிய இந்திய நகரங்கள்',
+    use_live_gps: 'நேரடி ஜிபிஎஸ் இருப்பிடத்தைப் பயன்படுத்துக',
+    install_app: 'செயலியை நிறுவுக',
+    plain_explanation: 'எளிய விளக்கம்',
+    source: 'மூலம்',
+    warning: 'எச்சரிக்கை',
+    watch: 'கண்காணிப்பு',
+    advisory: 'ஆலோசனை',
     next: 'அடுத்து',
     confirm: 'உறுதிசெய்து தொடரவும்',
     stale_notice: 'கடைசியாக அறியப்பட்ட வானிலை தரவு காட்டப்படுகிறது.'
@@ -268,6 +518,9 @@ export const UI_STRINGS: Record<string, Record<string, string>> = {
     active_profile: 'ప్రస్తుత ప్రొఫైల్',
     switch_category: 'వర్గాన్ని మార్చండి',
     action_plan: 'కార్యాచరణ ప్రణాళిక',
+    action_required: 'చర్య అవసరం',
+    advisory_caution: 'జాగ్రత్త సలహా',
+    optimal_window: 'అనుకూల సమయం',
     active_alerts: 'సక్రియ హెచ్చరికలు',
     no_active_alerts: 'తీవ్రమైన హెచ్చరికలు లేవు.',
     bulletins: 'వాతావరణ బులెటిన్లు',
@@ -299,6 +552,15 @@ export const UI_STRINGS: Record<string, Record<string, string>> = {
     relaunch_onboarding: 'సెటప్‌ని పునఃప్రారంభించండి',
     select_language: 'భాషను ఎంచుకోండి',
     select_profession: 'వృత్తిని ఎంచుకోండి',
+    display_language: 'ప్రదర్శన భాష',
+    popular_hubs: 'ప్రముఖ భారతీయ నగరాలు',
+    use_live_gps: 'లైవ్ జీపీఎస్ లొకేషన్ ఉపయోగించండి',
+    install_app: 'యాప్ ఇన్‌స్టాల్ చేయండి',
+    plain_explanation: 'సులభమైన వివరణ',
+    source: 'మూలం',
+    warning: 'హెచ్చరిక',
+    watch: 'పర్యవేక్షణ',
+    advisory: 'సలహా',
     next: 'తరువాత',
     confirm: 'నిర్ధారించి కొనసాగించండి',
     stale_notice: 'చివరిగా తెలిసిన డేటా చూపబడుతోంది.'
@@ -333,6 +595,9 @@ export const UI_STRINGS: Record<string, Record<string, string>> = {
     active_profile: 'বর্তমান প্রোফাইল',
     switch_category: 'বিভাগ পরিবর্তন করুন',
     action_plan: 'কর্মপরিকল্পনা',
+    action_required: 'পদক্ষেপ প্রয়োজন',
+    advisory_caution: 'সতর্কতা পরামর্শ',
+    optimal_window: 'অনুকূল সময়',
     active_alerts: 'সক্রিয় সতর্কতা',
     no_active_alerts: 'কোনো গুরুতর সতর্কতা নেই।',
     bulletins: 'আবহাওয়া বুলেটিন',
@@ -364,6 +629,15 @@ export const UI_STRINGS: Record<string, Record<string, string>> = {
     relaunch_onboarding: 'সেটআপ পুনরায় শুরু করুন',
     select_language: 'ভাষা নির্বাচন করুন',
     select_profession: 'পেশা নির্বাচন করুন',
+    display_language: 'ডিসপ্লে ও সহকারী ভাষা',
+    popular_hubs: 'জনপ্রিয় ভারতীয় শহর',
+    use_live_gps: 'লাইভ জিপিএস অবস্থান ব্যবহার করুন',
+    install_app: 'অ্যাপ ইনস্টল করুন',
+    plain_explanation: 'সহজ ব্যাখ্যা',
+    source: 'উৎস',
+    warning: 'সতর্কতা',
+    watch: 'নজরদারি',
+    advisory: 'পরামর্শ',
     next: 'পরবর্তী',
     confirm: 'নিশ্চিত করুন',
     stale_notice: 'সর্বশেষ পরিচিত তথ্য প্রদর্শিত হচ্ছে।'
@@ -398,6 +672,9 @@ export const UI_STRINGS: Record<string, Record<string, string>> = {
     active_profile: 'सक्रिय प्रोफाइल',
     switch_category: 'श्रेणी बदला',
     action_plan: 'कृती योजना',
+    action_required: 'कृती आवश्यक',
+    advisory_caution: 'सावधगिरीचा सल्ला',
+    optimal_window: 'अनुकूल वेळ',
     active_alerts: 'सक्रिय आपत्ती इशारे',
     no_active_alerts: 'कोणताही गंभीर इशारा नाही.',
     bulletins: 'हवामान बुलेटिन',
@@ -429,9 +706,557 @@ export const UI_STRINGS: Record<string, Record<string, string>> = {
     relaunch_onboarding: 'सेटअप पुन्हा सुरू करा',
     select_language: 'भाषा निवडा',
     select_profession: 'व्यवसाय निवडा',
+    display_language: 'प्रदर्शन भाषा',
+    popular_hubs: 'प्रमुख भारतीय शहरे',
+    use_live_gps: 'थेट जीपीएस स्थान वापरा',
+    install_app: 'अ‍ॅप इन्स्टॉल करा',
+    plain_explanation: 'सोपे स्पष्टीकरण',
+    source: 'स्रोत',
+    warning: 'इशारा',
+    watch: 'निरीक्षण',
+    advisory: 'सल्ला',
     next: 'पुढे',
     confirm: 'पुष्टी करा',
     stale_notice: 'शेवटचा उपलब्ध डेटा दाखवत आहे.'
+  },
+  gu: {
+    app_title: 'વેધર જીપીટી',
+    tab_profession: 'વ્યવસાય',
+    tab_research: 'સંશોધન',
+    tab_home: 'હોમ',
+    tab_disaster: 'હોનારત',
+    tab_settings: 'સેટિંગ્સ',
+    search_placeholder: 'હવામાન અથવા પાક વિશે પૂછો...',
+    listening: 'સાંભળી રહ્યું છે...',
+    analyzing: 'વિશ્લેષણ થઈ રહ્યું છે...',
+    todays_climate: 'આજનું હવામાન',
+    feels_like: 'અનુભવાય છે',
+    humidity: 'ભેજ',
+    wind: 'પવનની ગતિ',
+    uv: 'યુવી ઇન્ડેક્સ',
+    aqi: 'હવાની ગુણવત્તા',
+    forecast_7day: '૭ દિવસની આગાહી',
+    scroll_hint: 'વધુ જોવા સ્ક્રોલ કરો →',
+    today: 'આજે',
+    rain_chance: 'વરસાદ',
+    doppler_radar: 'ડોપ્લર રડાર અને ઉપગ્રહ',
+    live_sweep: 'લાઈવ રડાર',
+    rain_radar: 'વરસાદ રડાર',
+    thermal: 'તાપમાન',
+    wind_flow: 'પવનનો પ્રવાહ',
+    profession_advisory: 'વ્યવસાયિક સલાહ',
+    operational_guidance: 'AI માર્ગદર્શન',
+    active_profile: 'સક્રિય પ્રોફાઇલ',
+    switch_category: 'કેટેગરી બદલો',
+    action_plan: 'કાર્ય યોજના',
+    action_required: 'કાર્યવાહી જરૂરી',
+    advisory_caution: 'સાવચેતી સલાહ',
+    optimal_window: 'અનુકૂળ સમય',
+    active_alerts: 'સક્રિય ચેતવણીઓ',
+    no_active_alerts: 'કોઈ ગંભીર ચેતવણી નથી.',
+    bulletins: 'હવામાન બુલેટિન',
+    emergency_checklist: 'કટોકટી ક્રિયા સૂચિ',
+    dos: 'શું કરવું',
+    donts: 'શું ન કરવું',
+    emergency_helplines: 'ઇમરજન્સી હેલ્પલાઇન',
+    climate_research: 'હવામાન સંશોધન',
+    diagnostic_indices: 'લાઇવ હવામાન સૂચકાંક',
+    plain_tooltip_hint: 'સમજવા માટે ℹ️ દબાવો',
+    historical_chart: 'ઐતિહાસિક તાપમાન અને વરસાદ',
+    settings_title: 'સેટિંગ્સ',
+    settings_subtitle: 'થીમ અને સૂચનાઓ સેટ કરો.',
+    theme_display: 'થીમ મોડ',
+    system_default: 'સિસ્ટમ ડિફૉલ્ટ',
+    light_vibrant: 'લાઇટ વાઇબ્રન્ટ',
+    dark_mode: 'ડાર્ક મોડ',
+    measurement_units: 'માપન એકમો',
+    temp_unit: 'તાપમાન',
+    wind_unit: 'પવનની ગતિ',
+    saved_cities: 'મનપસંદ શહેરો',
+    add_favorites: 'મનપસંદમાં ઉમેરો',
+    default_badge: 'ડિફૉલ્ટ',
+    notifications_alerts: 'ચેતવણીઓ અને સૂચનાઓ',
+    severe_alerts_toggle: 'વાવાઝોડું અને પૂર ચેતવણી',
+    severe_alerts_desc: 'તાત્કાલિક ચેતવણીઓ મેળવો',
+    daily_digest_toggle: 'દૈનિક સવારનો અહેવાલ',
+    daily_digest_desc: 'સવારે ૭:૦૦ વાગ્યે સારાંશ મેળવો',
+    relaunch_onboarding: 'સેટઅપ ફરી શરૂ કરો',
+    select_language: 'ભાષા પસંદ કરો',
+    select_profession: 'વ્યવસાય પસંદ કરો',
+    display_language: 'ડિસ્પ્લે ભાષા',
+    popular_hubs: 'પ્રમુખ ભારતીય શહેરો',
+    use_live_gps: 'લાઈવ જીપીએસ વાપરો',
+    install_app: 'એપ ઇન્સ્ટોલ કરો',
+    plain_explanation: 'સરળ સમજૂતી',
+    source: 'સ્ત્રોત',
+    warning: 'ચેતવણી',
+    watch: 'નિરીક્ષણ',
+    advisory: 'સલાહ',
+    next: 'આગળ',
+    confirm: 'પુષ્ટિ કરો',
+    stale_notice: 'છેલ્લો ઉપલબ્ધ ડેટા બતાવી રહ્યું છે.'
+  },
+  kn: {
+    app_title: 'ವೆದರ್ ಜಿಪಿಟಿ',
+    tab_profession: 'ವೃತ್ತಿ',
+    tab_research: 'ಸಂಶೋಧನೆ',
+    tab_home: 'ಮುಖಪುಟ',
+    tab_disaster: 'ವಿಪತ್ತು',
+    tab_settings: 'ಸೆಟ್ಟಿಂಗ್ಸ್',
+    search_placeholder: 'ಹವಾಮಾನ ಅಥವಾ ಬೆಳೆಗಳ ಬಗ್ಗೆ ಕೇಳಿ...',
+    listening: 'ಆಲಿಸಲಾಗುತ್ತಿದೆ...',
+    analyzing: 'ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ...',
+    todays_climate: 'ಇಂದಿನ ಹವಾಮಾನ',
+    feels_like: 'ಅನಿಸುತ್ತದೆ',
+    humidity: 'ತೇವಾಂಶ',
+    wind: 'ಗಾಳಿಯ ವೇಗ',
+    uv: 'ಯುವಿ ಸೂಚ್ಯಂಕ',
+    aqi: 'ಗಾಳಿಯ ಗುಣಮಟ್ಟ',
+    forecast_7day: '೭ ದಿನಗಳ ಮುನ್ಸೂಚನೆ',
+    scroll_hint: 'ಮುಂದೆ ನೋಡಲು ಸ್ಕ್ರಾಲ್ ಮಾಡಿ →',
+    today: 'ಇಂದು',
+    rain_chance: 'ಮಳೆ',
+    doppler_radar: 'ಡಾಪ್ಲರ್ ರಾಡಾರ್ & ಉಪಗ್ರಹ',
+    live_sweep: 'ಲೈವ್ ರಾಡಾರ್',
+    rain_radar: 'ಮಳೆ ರಾಡಾರ್',
+    thermal: 'ತಾಪಮಾನ',
+    wind_flow: 'ಗಾಳಿಯ ಹರಿವು',
+    profession_advisory: 'ವೃತ್ತಿ ಸಲಹೆ',
+    operational_guidance: 'AI ಕಾರ್ಯಾಚರಣೆ ಮಾರ್ಗದರ್ಶನ',
+    active_profile: 'ಸಕ್ರಿಯ ಪ್ರೊಫೈಲ್',
+    switch_category: 'ವರ್ಗವನ್ನು ಬದಲಾಯಿಸಿ',
+    action_plan: 'ಕಾರ್ಯಾಚರಣೆ ಯೋಜನೆ',
+    action_required: 'ಕ್ರಮ ಅಗತ್ಯವಿದೆ',
+    advisory_caution: 'ಎಚ್ಚರಿಕೆ ಸಲಹೆ',
+    optimal_window: 'ಅನುಕೂಲಕರ ಸಮಯ',
+    active_alerts: 'ಸಕ್ರಿಯ ಎಚ್ಚರಿಕೆಗಳು',
+    no_active_alerts: 'ಯಾವುದೇ ತೀವ್ರ ಎಚ್ಚರಿಕೆಗಳಿಲ್ಲ.',
+    bulletins: 'ಹವಾಮಾನ ಬುಲೆಟಿನ್',
+    emergency_checklist: 'ತುರ್ತು ಕ್ರಿಯಾ ಪಟ್ಟಿ',
+    dos: 'ಮಾಡಬೇಕಾದವು',
+    donts: 'ಮಾಡಬಾರದವು',
+    emergency_helplines: 'ತುರ್ತು ಸಹಾಯವಾಣಿ',
+    climate_research: 'ಹವಾಮಾನ ಸಂಶೋಧನೆ',
+    diagnostic_indices: 'ಲೈವ್ ಹವಾಮಾನ ಸೂಚ್ಯಂಕಗಳು',
+    plain_tooltip_hint: 'ವಿವರಣೆಗೆ ℹ️ ಒತ್ತಿ',
+    historical_chart: 'ಐತಿಹಾಸಿಕ ತಾಪಮಾನ ಮತ್ತು ಮಳೆ',
+    settings_title: 'ಸೆಟ್ಟಿಂಗ್ಸ್',
+    settings_subtitle: 'ಥೀಮ್ ಮತ್ತು ಅಧಿಸೂಚನೆಗಳನ್ನು ಹೊಂದಿಸಿ.',
+    theme_display: 'ಥೀಮ್ ಮೋಡ್',
+    system_default: 'ಸಿಸ್ಟಮ್ ಡಿಫಾಲ್ಟ್',
+    light_vibrant: 'ಲೈಟ್ ವೈಬ್ರೆಂಟ್',
+    dark_mode: 'ಡಾರ್ಕ್ ಮೋಡ್',
+    measurement_units: 'ಅಳತೆ ಘಟಕಗಳು',
+    temp_unit: 'ತಾಪಮಾನ',
+    wind_unit: 'ಗಾಳಿಯ ವೇಗ',
+    saved_cities: 'ಮೆಚ್ಚಿನ ನಗರಗಳು',
+    add_favorites: 'ಮೆಚ್ಚಿನವುಗಳಿಗೆ ಸೇರಿಸಿ',
+    default_badge: 'ಡೀಫಾಲ್ಟ್',
+    notifications_alerts: 'ಎಚ್ಚರಿಕೆಗಳು & ಅಧಿಸೂಚನೆಗಳು',
+    severe_alerts_toggle: 'ಚಂಡಮಾರುತ ಮತ್ತು ಪ್ರವಾಹ ಎಚ್ಚರಿಕೆಗಳು',
+    severe_alerts_desc: 'ತಕ್ಷಣದ ತುರ್ತು ಎಚ್ಚರಿಕೆಗಳನ್ನು ಪಡೆಯಿರಿ',
+    daily_digest_toggle: 'ದೈನಂದಿನ ಬೆಳಗಿನ ವರದಿ',
+    daily_digest_desc: 'ಬೆಳಿಗ್ಗೆ ೭:೦೦ ಗಂಟೆಗೆ ಸಾರಾಂಶ ಪಡೆಯಿರಿ',
+    relaunch_onboarding: 'ಸೆಟಪ್ ಮರುಪ್ರಾರಂಭಿಸಿ',
+    select_language: 'ಭಾಷೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ',
+    select_profession: 'ವೃತ್ತಿಯನ್ನು ಆಯ್ಕೆಮಾಡಿ',
+    display_language: 'ಪ್ರದರ್ಶನ ಭಾಷೆ',
+    popular_hubs: 'ಪ್ರಮುಖ ಭಾರತೀಯ ನಗರಗಳು',
+    use_live_gps: 'ಲೈವ್ ಜಿಪಿಎಸ್ ಬಳಸಿ',
+    install_app: 'ಆ್ಯಪ್ ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಿ',
+    plain_explanation: 'ಸರಳ ವಿವರಣೆ',
+    source: 'ಮೂಲ',
+    warning: 'ಎಚ್ಚರಿಕೆ',
+    watch: 'ವೀಕ್ಷಣೆ',
+    advisory: 'ಸಲಹೆ',
+    next: 'ಮುಂದೆ',
+    confirm: 'ಖಚಿತಪಡಿಸಿ ಮುಂದುವರಿಯಿರಿ',
+    stale_notice: 'ಕೊನೆಯದಾಗಿ ತಿಳಿದಿರುವ ಡೇಟಾ ತೋರಿಸಲಾಗುತ್ತಿದೆ.'
+  },
+  ml: {
+    app_title: 'വെതർ ജിപിടി',
+    tab_profession: 'തൊഴിൽ',
+    tab_research: 'ഗവേഷണം',
+    tab_home: 'ഹോം',
+    tab_disaster: 'ദുരന്തം',
+    tab_settings: 'സെറ്റിംഗ്സ്',
+    search_placeholder: 'കാലാവസ്ഥയെക്കുറിച്ചോ വിളകളെക്കുറിച്ചോ ചോദിക്കുക...',
+    listening: 'കേൾക്കുന്നു...',
+    analyzing: 'വിശകലനം ചെയ്യുന്നു...',
+    todays_climate: 'ഇന്നത്തെ കാലാവസ്ഥ',
+    feels_like: 'അനുഭവപ്പെടുന്നത്',
+    humidity: 'ഈർപ്പം',
+    wind: 'കാറ്റിന്റെ വേഗത',
+    uv: 'യുവി സൂചിക',
+    aqi: 'വായു ഗുണനിലവാരം',
+    forecast_7day: '7 ദിവസത്തെ പ്രവചനം',
+    scroll_hint: 'കൂടുതൽ കാണാൻ സ്ക്രോൾ ചെയ്യുക →',
+    today: 'ഇന്ന്',
+    rain_chance: 'മഴ',
+    doppler_radar: 'ഡോപ്ലർ റഡാർ & ഉപഗ്രഹം',
+    live_sweep: 'ലൈവ് റഡാർ',
+    rain_radar: 'മഴ റഡാർ',
+    thermal: 'താപനില',
+    wind_flow: 'കാറ്റിന്റെ ഒഴുക്ക്',
+    profession_advisory: 'തൊഴിൽ ഉപദേശം',
+    operational_guidance: 'AI പ്രവർത്തന മാർഗ്ഗനിർദ്ദേശം',
+    active_profile: 'നിലവിലെ പ്രൊഫൈൽ',
+    switch_category: 'വിഭാഗം മാറ്റുക',
+    action_plan: 'പ്രവർത്തന പദ്ധതി',
+    action_required: 'നടപടി ആവശ്യമാണ്',
+    advisory_caution: 'മുന്നറിയിപ്പ് ഉപദേശം',
+    optimal_window: 'അനുകൂല സമയം',
+    active_alerts: 'സജീവ മുന്നറിയിപ്പുകൾ',
+    no_active_alerts: 'തീവ്ര മുന്നറിയിപ്പുകൾ ഒന്നുമില്ല.',
+    bulletins: 'കാലാവസ്ഥാ ബുള്ളറ്റിനുകൾ',
+    emergency_checklist: 'അടിയന്തര പ്രവർത്തന പട്ടിക',
+    dos: 'ചെയ്യേണ്ടവ',
+    donts: 'ചെയ്യരുതാത്തവ',
+    emergency_helplines: 'അടിയന്തര ഹെൽപ്പ്‌ലൈൻ',
+    climate_research: 'കാലാവസ്ഥാ ഗവേഷണം',
+    diagnostic_indices: 'തത്സമയ കാലാവസ്ഥാ സൂചികകൾ',
+    plain_tooltip_hint: 'വിശദീകരണത്തിന് ℹ️ അമർത്തുക',
+    historical_chart: 'ചരിത്രപരമായ താപനിലയും മഴയും',
+    settings_title: 'സെറ്റിംഗ്സ്',
+    settings_subtitle: 'തീമും അറിയിപ്പുകളും ക്രമീകരിക്കുക.',
+    theme_display: 'തീം മോഡ്',
+    system_default: 'സിസ്റ്റം ഡിഫോൾട്ട്',
+    light_vibrant: 'ലൈറ്റ് വൈബ്രന്റ്',
+    dark_mode: 'ഡാർക്ക് മോഡ്',
+    measurement_units: 'അളവ് യൂണിറ്റുകൾ',
+    temp_unit: 'താപനില',
+    wind_unit: 'കാറ്റിന്റെ വേഗത',
+    saved_cities: 'പ്രിയപ്പെട്ട നഗരങ്ങൾ',
+    add_favorites: 'പ്രിയപ്പെട്ടവയിലേക്ക് ചേർക്കുക',
+    default_badge: 'ഡിഫോൾട്ട്',
+    notifications_alerts: 'മുന്നറിയിപ്പുകളും അറിയിപ്പുകളും',
+    severe_alerts_toggle: 'ചുഴലിക്കാറ്റ് & വെള്ളപ്പൊക്ക മുന്നറിയിപ്പുകൾ',
+    severe_alerts_desc: 'അടിയന്തര അറിയിപ്പുകൾ ഉടൻ ലഭ്യമാക്കുക',
+    daily_digest_toggle: 'പ്രഭാത റിപ്പോർട്ട്',
+    daily_digest_desc: 'രാവിലെ 7:00 മണിക്ക് സംഗ്രഹം നേടുക',
+    relaunch_onboarding: 'സജ്ജീകരണം പുനരാരംഭിക്കുക',
+    select_language: 'ഭാഷ തിരഞ്ഞെടുക്കുക',
+    select_profession: 'തൊഴിൽ തിരഞ്ഞെടുക്കുക',
+    display_language: 'ഡിസ്പ്ലേ ഭാഷ',
+    popular_hubs: 'പ്രധാന ഇന്ത്യൻ നഗരങ്ങൾ',
+    use_live_gps: 'ലൈവ് ജിപിഎസ് ഉപയോഗിക്കുക',
+    install_app: 'ആപ്പ് ഇൻസ്റ്റാൾ ചെയ്യുക',
+    plain_explanation: 'ലളിതമായ വിശദീകരണം',
+    source: 'ഉറവിടം',
+    warning: 'മുന്നറിയിപ്പ്',
+    watch: 'നിരീക്ഷണം',
+    advisory: 'ഉപദേശം',
+    next: 'അടുത്തത്',
+    confirm: 'സ്ഥിരീകരിക്കുക',
+    stale_notice: 'അവസാനം ലഭ്യമായ വിവരങ്ങൾ കാണിക്കുന്നു.'
+  },
+  or: {
+    app_title: 'ୱେଦର ଜିପିଟି',
+    tab_profession: 'ବୃତ୍ତି',
+    tab_research: 'ଗବେଷଣା',
+    tab_home: 'ମୁଖ୍ୟ',
+    tab_disaster: 'ବିପର୍ଯ୍ୟୟ',
+    tab_settings: 'ସେଟିଙ୍ଗସ୍',
+    search_placeholder: 'ପାଣିପାଗ କିମ୍ବା ଫସଲ ବିଷୟରେ ପଚାରନ୍ତୁ...',
+    listening: 'ଶୁଣୁଛି...',
+    analyzing: 'ବିଶ୍ଳେଷଣ ଚାଲିଛି...',
+    todays_climate: 'ଆଜିର ପାଣିପାଗ',
+    feels_like: 'ଅନୁଭୂତ',
+    humidity: 'ଆର୍ଦ୍ରତା',
+    wind: 'ପବନ ବେଗ',
+    uv: 'ୟୁଭି ସୂଚକାଙ୍କ',
+    aqi: 'ବାୟୁ ମାନ',
+    forecast_7day: '୭-ଦିନର ପୂର୍ବାନୁମାନ',
+    scroll_hint: 'ଅଧିକ ଦେଖିବା ପାଇଁ ସ୍କ୍ରୋଲ୍ କରନ୍ତୁ →',
+    today: 'ଆଜି',
+    rain_chance: 'ବର୍ଷା',
+    doppler_radar: 'ଡପଲର୍ ରାଡାର୍ ଓ ଉପଗ୍ରହ',
+    live_sweep: 'ଲାଇଭ୍ ରାଡାର୍',
+    rain_radar: 'ବର୍ଷା ରାଡାର୍',
+    thermal: 'ତାପମାତ୍ରା',
+    wind_flow: 'ପବନର ପ୍ରବାହ',
+    profession_advisory: 'ବୃତ୍ତିଗତ ପରାମର୍ଶ',
+    operational_guidance: 'AI ମାର୍ଗଦର୍ଶନ',
+    active_profile: 'ସକ୍ରିୟ ପ୍ରୋଫାଇଲ୍',
+    switch_category: 'ବିଭାଗ ବଦଳାନ୍ତୁ',
+    action_plan: 'କାର୍ଯ୍ୟ ଯୋଜନା',
+    action_required: 'ପଦକ୍ଷେପ ଆବଶ୍ୟକ',
+    advisory_caution: 'ସତର୍କତା ପରାମର୍ଶ',
+    optimal_window: 'ଅନୁକୂଳ ସମୟ',
+    active_alerts: 'ସକ୍ରିୟ ସତର୍କତା',
+    no_active_alerts: 'କୌଣସି ଗୁରୁତର ସତର୍କତା ନାହିଁ।',
+    bulletins: 'ପାଣିପାଗ ବୁଲେଟିନ୍',
+    emergency_checklist: 'ଜରୁରୀକାଳୀନ କାର୍ଯ୍ୟ ତାଲିକା',
+    dos: 'କଣ କରିବେ',
+    donts: 'କଣ କରିବେ ନାହିଁ',
+    emergency_helplines: 'ଜରୁରୀକାଳୀନ ହେଲ୍ପଲାଇନ୍',
+    climate_research: 'ଜଳବାୟୁ ଗବେଷଣା',
+    diagnostic_indices: 'ଲାଇଭ୍ ପାଣିପାଗ ସୂଚକ',
+    plain_tooltip_hint: 'ବୁଝିବା ପାଇଁ ℹ️ ଦବାନ୍ତୁ',
+    historical_chart: 'ଐତିହାସିକ ତାପମାତ୍ରା ଓ ବର୍ଷା',
+    settings_title: 'ସେଟିଙ୍ଗସ୍',
+    settings_subtitle: 'ଥିମ୍ ଏବଂ ବିଜ୍ଞପ୍ତି ସେଟ୍ କରନ୍ତୁ।',
+    theme_display: 'ଥିମ୍ ମୋଡ୍',
+    system_default: 'ସିଷ୍ଟମ୍ ଡିଫଲ୍ଟ',
+    light_vibrant: 'ଲାଇଟ୍ ଭାଇବ୍ରାଣ୍ଟ',
+    dark_mode: 'ଡାର୍କ ମୋଡ୍',
+    measurement_units: 'ମାପ ଏକକ',
+    temp_unit: 'ତାପମାତ୍ରା',
+    wind_unit: 'ପବନ ବେଗ',
+    saved_cities: 'ପସନ୍ଦର ସହର',
+    add_favorites: 'ପସନ୍ଦରେ ଯୋଡନ୍ତୁ',
+    default_badge: 'ଡିଫଲ୍ଟ',
+    notifications_alerts: 'ସତର୍କତା ଓ ବିଜ୍ଞପ୍ତି',
+    severe_alerts_toggle: 'ବାତ୍ୟା ଓ ବନ୍ୟା ସତର୍କତା',
+    severe_alerts_desc: 'ତୁରନ୍ତ ସତର୍କତା ପାଆନ୍ତୁ',
+    daily_digest_toggle: 'ଦୈନିକ ସକାଳ ରିପୋର୍ଟ',
+    daily_digest_desc: 'ସକାଳ ୭:୦୦ ରେ ସାରାଂଶ ପାଆନ୍ତୁ',
+    relaunch_onboarding: 'ସେଟଅପ୍ ପୁନର୍ବାର ଆରମ୍ଭ କରନ୍ତୁ',
+    select_language: 'ଭାଷା ବାଛନ୍ତୁ',
+    select_profession: 'ବୃତ୍ତି ବାଛନ୍ତୁ',
+    display_language: 'ପ୍ରଦର୍ଶନ ଭାଷା',
+    popular_hubs: 'ପ୍ରମୁଖ ଭାରତୀୟ ସହର',
+    use_live_gps: 'ଲାଇଭ୍ ଜିପିଏସ୍ ବ୍ୟବହାର କରନ୍ତୁ',
+    install_app: 'ଆପ୍ ଇନଷ୍ଟଲ୍ କରନ୍ତୁ',
+    plain_explanation: 'ସରଳ ବ୍ୟାଖ୍ୟା',
+    source: 'ଉତ୍ସ',
+    warning: 'ସତର୍କତା',
+    watch: 'ନଜର',
+    advisory: 'ପରାମର୍ଶ',
+    next: 'ପରବର୍ତ୍ତୀ',
+    confirm: 'ନିଶ୍ଚିତ କରନ୍ତୁ',
+    stale_notice: 'ଶେଷ ଉପଲବ୍ଧ ତଥ୍ୟ ପ୍ରଦର୍ଶିତ ହେଉଛି।'
+  },
+  pa: {
+    app_title: 'ਵੈਦਰ ਜੀਪੀਟੀ',
+    tab_profession: 'ਕਿੱਤਾ',
+    tab_research: 'ਖੋਜ',
+    tab_home: 'ਮੁੱਖ',
+    tab_disaster: 'ਆਫ਼ਤ',
+    tab_settings: 'ਸੈਟਿੰਗਾਂ',
+    search_placeholder: 'ਮੌਸਮ ਜਾਂ ਫ਼ਸਲਾਂ ਬਾਰੇ ਪੁੱਛੋ...',
+    listening: 'ਸੁਣ ਰਿਹਾ ਹੈ...',
+    analyzing: 'ਵਿਸ਼ਲੇਸ਼ਣ ਹੋ ਰਿਹਾ ਹੈ...',
+    todays_climate: 'ਅੱਜ ਦਾ ਮੌਸਮ',
+    feels_like: 'ਮਹਿਸੂਸ ਹੁੰਦਾ ਹੈ',
+    humidity: 'ਨਮੀ',
+    wind: 'ਹਵਾ ਦੀ ਰਫ਼ਤਾਰ',
+    uv: 'ਯੂਵੀ ਇੰਡੈਕਸ',
+    aqi: 'ਹਵਾ ਗੁਣਵੱਤਾ',
+    forecast_7day: '7-ਦਿਨਾਂ ਦਾ ਪੂਰਵ ਅਨੁਮਾਨ',
+    scroll_hint: 'ਹੋਰ ਦੇਖਣ ਲਈ ਸਕ੍ਰੋਲ ਕਰੋ →',
+    today: 'ਅੱਜ',
+    rain_chance: 'ਮੀਂਹ',
+    doppler_radar: 'ਡੌਪਲਰ ਰਡਾਰ ਅਤੇ ਉਪਗ੍ਰਹਿ',
+    live_sweep: 'ਲਾਈਵ ਰਡਾਰ',
+    rain_radar: 'ਮੀਂਹ ਰਡਾਰ',
+    thermal: 'ਤਾਪਮਾਨ',
+    wind_flow: 'ਹਵਾ ਦਾ ਵਹਾਅ',
+    profession_advisory: 'ਕਿੱਤਾਮੁਖੀ ਸਲਾਹ',
+    operational_guidance: 'AI ਕਾਰਜਕਾਰੀ ਮਾਰਗਦਰਸ਼ਨ',
+    active_profile: 'ਸਰਗਰਮ ਪ੍ਰੋਫਾਈਲ',
+    switch_category: 'ਸ਼੍ਰੇਣੀ ਬਦਲੋ',
+    action_plan: 'ਕਾਰਜ ਯੋਜਨਾ',
+    action_required: 'ਕਾਰਵਾਈ ਦੀ ਲੋੜ',
+    advisory_caution: 'ਸਾਵਧਾਨੀ ਸਲਾਹ',
+    optimal_window: 'ਅਨੁਕੂਲ ਸਮਾਂ',
+    active_alerts: 'ਸਰਗਰਮ ਚੇਤਾਵਨੀਆਂ',
+    no_active_alerts: 'ਕੋਈ ਗੰਭੀਰ ਚੇਤਾਵਨੀ ਨਹੀਂ ਹੈ।',
+    bulletins: 'ਮੌਸਮ ਬੁਲੇਟਿਨ',
+    emergency_checklist: 'ਐਮਰਜੈਂਸੀ ਕਾਰਵਾਈ ਸੂਚੀ',
+    dos: 'ਕੀ ਕਰਨਾ ਹੈ',
+    donts: 'ਕੀ ਨਹੀਂ ਕਰਨਾ',
+    emergency_helplines: 'ਐਮਰਜੈਂਸੀ ਹੈਲਪਲਾਈਨ',
+    climate_research: 'ਜਲਵਾਯੂ ਖੋਜ',
+    diagnostic_indices: 'ਲਾਈਵ ਮੌਸਮ ਸੂਚਕ',
+    plain_tooltip_hint: 'ਸਮਝਣ ਲਈ ℹ️ ਦਬਾਓ',
+    historical_chart: 'ਇਤਿਹਾਸਕ ਤਾਪਮਾਨ ਅਤੇ ਮੀਂਹ',
+    settings_title: 'ਸੈਟਿੰਗਾਂ',
+    settings_subtitle: 'ਥੀਮ ਅਤੇ ਸੂਚਨਾਵਾਂ ਸੈੱਟ ਕਰੋ।',
+    theme_display: 'ਥੀਮ ਮੋਡ',
+    system_default: 'ਸਿਸਟਮ ਡਿਫੌਲਟ',
+    light_vibrant: 'ਲਾਈਟ ਵਾਈਬ੍ਰੈਂਟ',
+    dark_mode: 'ਡਾਰਕ ਮੋਡ',
+    measurement_units: 'ਮਾਪ ਇਕਾਈਆਂ',
+    temp_unit: 'ਤਾਪਮਾਨ',
+    wind_unit: 'ਹਵਾ ਦੀ ਰਫ਼ਤਾਰ',
+    saved_cities: 'ਮਨਪਸੰਦ ਸ਼ਹਿਰ',
+    add_favorites: 'ਮਨਪਸੰਦ ਵਿੱਚ ਸ਼ਾਮਲ ਕਰੋ',
+    default_badge: 'ਡਿਫੌਲਟ',
+    notifications_alerts: 'ਚੇਤਾਵਨੀਆਂ ਅਤੇ ਸੂਚਨਾਵਾਂ',
+    severe_alerts_toggle: 'ਤੂਫ਼ਾਨ ਅਤੇ ਹੜ੍ਹ ਚੇਤਾਵਨੀ',
+    severe_alerts_desc: 'ਤੁਰੰਤ ਚੇਤਾਵਨੀਆਂ ਪ੍ਰਾਪਤ ਕਰੋ',
+    daily_digest_toggle: 'ਰੋਜ਼ਾਨਾ ਸਵੇਰ ਦੀ ਰਿਪੋਰਟ',
+    daily_digest_desc: 'ਸਵੇਰੇ 7:00 ਵਜੇ ਸਾਰਾਂਸ਼ ਪ੍ਰਾਪਤ ਕਰੋ',
+    relaunch_onboarding: 'ਸੈੱਟਅੱਪ ਮੁੜ ਸ਼ੁਰੂ ਕਰੋ',
+    select_language: 'ਭਾਸ਼ਾ ਚੁਣੋ',
+    select_profession: 'ਕਿੱਤਾ ਚੁਣੋ',
+    display_language: 'ਡਿਸਪਲੇ ਭਾਸ਼ਾ',
+    popular_hubs: 'ਪ੍ਰਮੁੱਖ ਭਾਰਤੀ ਸ਼ਹਿਰ',
+    use_live_gps: 'ਲਾਈਵ ਜੀਪੀਐਸ ਵਰਤੋਂ',
+    install_app: 'ਐਪ ਇੰਸਟਾਲ ਕਰੋ',
+    plain_explanation: 'ਸਰਲ ਵਿਆਖਿਆ',
+    source: 'ਸਰੋਤ',
+    warning: 'ਚੇਤਾਵਨੀ',
+    watch: 'ਨਿਗਰਾਨੀ',
+    advisory: 'ਸਲਾਹ',
+    next: 'ਅੱਗੇ',
+    confirm: 'ਪੁਸ਼ਟੀ ਕਰੋ',
+    stale_notice: 'ਆਖ਼ਰੀ ਜਾਣਿਆ ਡੇਟਾ ਦਿਖਾਇਆ ਜਾ ਰਿਹਾ ਹੈ।'
+  },
+  as: {
+    app_title: 'ৱেদাৰ জিপিটি',
+    tab_profession: 'বৃত্তি',
+    tab_research: 'গৱেষণা',
+    tab_home: 'গৃহ',
+    tab_disaster: 'দুৰ্যোগ',
+    tab_settings: 'ছেটিংছ',
+    search_placeholder: 'বতৰ বা শস্যৰ বিষয়ে সোধক...',
+    listening: 'শুনি থকা হৈছে...',
+    analyzing: 'বিশ্লেষণ কৰি থকা হৈছে...',
+    todays_climate: 'আজিৰ বতৰ',
+    feels_like: 'অনুভৱ হোৱা',
+    humidity: 'আৰ্দ্ৰতা',
+    wind: 'বতাহৰ গতি',
+    uv: 'ইউভি সূচক',
+    aqi: 'বায়ুৰ গুণমান',
+    forecast_7day: '৭ দিনৰ পূৰ্বাভাস',
+    scroll_hint: 'অধিক চাবলৈ স্ক্ৰল কৰক →',
+    today: 'আজি',
+    rain_chance: 'বৰষুণ',
+    doppler_radar: 'ডপলাৰ ৰাডাৰ আৰু উপগ্ৰহ',
+    live_sweep: 'লাইভ ৰাডাৰ',
+    rain_radar: 'বৰষুণ ৰাডাৰ',
+    thermal: 'উত্তাপ',
+    wind_flow: 'বতাহৰ প্ৰবাহ',
+    profession_advisory: 'পেছাদাৰী পৰামৰ্শ',
+    operational_guidance: 'AI নিৰ্দেশনা',
+    active_profile: 'বৰ্তমান প্ৰফাইল',
+    switch_category: 'শ্ৰেণী সলনি কৰক',
+    action_plan: 'কাৰ্য পৰিকল্পনা',
+    action_required: 'পদক্ষেপ প্ৰয়োজন',
+    advisory_caution: 'সতৰ্কবাৰ্তা পৰামৰ্শ',
+    optimal_window: 'অনুকূল সময়',
+    active_alerts: 'সক্ৰিয় সতৰ্কবাৰ্তা',
+    no_active_alerts: 'কোনো জৰুৰী সতৰ্কবাৰ্তা নাই।',
+    bulletins: 'বতৰৰ বুলেটিন',
+    emergency_checklist: 'জৰুৰীকালীন কাৰ্য তালিকা',
+    dos: 'কৰণীয়',
+    donts: 'বৰ্জনীয়',
+    emergency_helplines: 'জৰুৰীকালীন হেল্পলাইন',
+    climate_research: 'জলবায়ু গৱেষণা',
+    diagnostic_indices: 'লাইভ বতৰৰ সূচক',
+    plain_tooltip_hint: 'ব্যাখ্যাৰ বাবে ℹ️ টিপক',
+    historical_chart: 'ঐতিহাসিক উষ্ণতা আৰু বৰষুণ',
+    settings_title: 'ছেটিংছ',
+    settings_subtitle: 'থিম আৰু জাননীসমূহ ছেট কৰক।',
+    theme_display: 'থিম মোড',
+    system_default: 'ছিষ্টেম ডিফল্ট',
+    light_vibrant: 'লাইট ভাইব্ৰেণ্ট',
+    dark_mode: 'ডাৰ্ক মোড',
+    measurement_units: 'পৰিমাপৰ একক',
+    temp_unit: 'উষ্ণতা',
+    wind_unit: 'বতাহৰ গতি',
+    saved_cities: 'প্ৰিয় চহৰসমূহ',
+    add_favorites: 'প্ৰিয় তালিকাত যোগ কৰক',
+    default_badge: 'ডিফল্ট',
+    notifications_alerts: 'সতৰ্কবাৰ্তা আৰু জাননী',
+    severe_alerts_toggle: 'ধুমুহা আৰু বানপানীৰ সতৰ্কবাৰ্তা',
+    severe_alerts_desc: 'ক্ষিপ্ৰ জাননী লাভ কৰক',
+    daily_digest_toggle: 'দৈনিক ৰাতিপুৱাৰ প্ৰতিবেদন',
+    daily_digest_desc: 'ৰাতিপুৱা ৭:০০ বজাত সাৰাংশ লাভ কৰক',
+    relaunch_onboarding: 'ছেটআপ পুনৰ আৰম্ভ কৰক',
+    select_language: 'ভাষা বাছক',
+    select_profession: 'বৃত্তি বাছক',
+    display_language: 'প্ৰদৰ্শন ভাষা',
+    popular_hubs: 'প্ৰধান ভাৰতীয় চহৰসমূহ',
+    use_live_gps: 'লাইভ জিপিএছ ব্যৱহাৰ কৰক',
+    install_app: 'এপ ইনষ্টল কৰক',
+    plain_explanation: 'সহজ ব্যাখ্যা',
+    source: 'উৎস',
+    warning: 'সতৰ্কবাৰ্তা',
+    watch: 'নিৰীক্ষণ',
+    advisory: 'পৰামৰ্শ',
+    next: 'পৰৱৰ্তী',
+    confirm: 'নিশ্চিত কৰক',
+    stale_notice: 'সৰ্বশেষ উপলব্ধ তথ্য প্ৰদৰ্শন কৰা হৈছে।'
+  },
+  ur: {
+    app_title: 'ویدر جی پی ٹی',
+    tab_profession: 'پیشہ',
+    tab_research: 'تحقیق',
+    tab_home: 'ہوم',
+    tab_disaster: 'آفات',
+    tab_settings: 'ترتیبات',
+    search_placeholder: 'موسم یا فصلوں کے بارے میں پوچھیں...',
+    listening: 'سن رہا ہے...',
+    analyzing: 'تجزیہ ہو رہا ہے...',
+    todays_climate: 'آج کا موسم',
+    feels_like: 'محسوس ہوتا ہے',
+    humidity: 'نمی',
+    wind: 'ہوا کی رفتار',
+    uv: 'یو وی انڈیکس',
+    aqi: 'ہوا کا معیار',
+    forecast_7day: '7 دن کی پیشین گوئی',
+    scroll_hint: 'مزید دیکھنے کے لیے اسکرول کریں →',
+    today: 'آج',
+    rain_chance: 'بارش',
+    doppler_radar: 'ڈوپلر ریڈار اور سیٹلائٹ',
+    live_sweep: 'لائیو ریڈار',
+    rain_radar: 'بارش ریڈار',
+    thermal: 'درجہ حرارت',
+    wind_flow: 'ہوا کا بہاؤ',
+    profession_advisory: 'پیشہ ورانہ مشورہ',
+    operational_guidance: 'AI آپریشنل رہنمائی',
+    active_profile: 'فعال پروفائل',
+    switch_category: 'زمرہ تبدیل کریں',
+    action_plan: 'لائحہ عمل',
+    action_required: 'کارروائی درکار ہے',
+    advisory_caution: 'احتیاطی مشورہ',
+    optimal_window: 'سازگار وقت',
+    active_alerts: 'فعال انتباہات',
+    no_active_alerts: 'کوئی شدید انتباہ فعال نہیں ہے۔',
+    bulletins: 'موسمیاتی بلیٹن',
+    emergency_checklist: 'ہنگامی ایکشن لسٹ',
+    dos: 'کیا کریں',
+    donts: 'کیا نہ کریں',
+    emergency_helplines: 'ہنگامی ہیلپ لائنز',
+    climate_research: 'آب و ہوا کی تحقیق',
+    diagnostic_indices: 'لائیو موسمیاتی اشارے',
+    plain_tooltip_hint: 'وضاحت کے لیے ℹ️ دبائیں',
+    historical_chart: 'تاریخی درجہ حرارت اور بارش',
+    settings_title: 'ترتیبات',
+    settings_subtitle: 'تھیم اور اطلاعات ترتیب دیں۔',
+    theme_display: 'تھیم موڈ',
+    system_default: 'سسٹم ڈیفالٹ',
+    light_vibrant: 'لائٹ وائبرنٹ',
+    dark_mode: 'ڈارک موڈ',
+    measurement_units: 'پیمائش کی اکائیاں',
+    temp_unit: 'درجہ حرارت',
+    wind_unit: 'ہوا کی رفتار',
+    saved_cities: 'پسندیدہ شہر',
+    add_favorites: 'پسندیدہ میں شامل کریں',
+    default_badge: 'ڈیفالٹ',
+    notifications_alerts: 'انتباہات اور اطلاعات',
+    severe_alerts_toggle: 'سمندری طوفان اور سیلاب کے انتباہات',
+    severe_alerts_desc: 'فوری ہنگامی اطلاعات حاصل کریں',
+    daily_digest_toggle: 'روزانہ صبح کی رپورٹ',
+    daily_digest_desc: 'صبح 7:00 بجے خلاصہ حاصل کریں',
+    relaunch_onboarding: 'سیٹ اپ دوبارہ شروع کریں',
+    select_language: 'زبان منتخب کریں',
+    select_profession: 'پیشہ منتخب کریں',
+    display_language: 'ڈسپلے زبان',
+    popular_hubs: 'اہم ہندوستانی شہر',
+    use_live_gps: 'لائیو GPS مقام استعمال کریں',
+    install_app: 'ایپ انسٹال کریں',
+    plain_explanation: 'آسان وضاحت',
+    source: 'ذریعہ',
+    warning: 'انتباہ',
+    watch: 'نگرانی',
+    advisory: 'مشورہ',
+    next: 'اگلا',
+    confirm: 'تصدیق کریں',
+    stale_notice: 'آخری دستیاب ڈیٹا دکھایا جا رہا ہے۔'
   }
 };
 
@@ -447,4 +1272,765 @@ export const getConditionTranslation = (condition: string, lang: string): string
     return match[lang];
   }
   return condition;
+};
+
+// ================= ADVISORY LOCALIZATION ENGINE =================
+export const ADVISORY_TRANSLATIONS: Record<string, Record<string, string>> = {
+  // Categories
+  "Flight Operations": {
+    hi: "उड़ान संचालन",
+    ta: "விமான செயல்பாடுகள்",
+    te: "విమాన కార్యకలాపాలు",
+    bn: "বিমান পরিচালনা",
+    mr: "उड्डाण संचालन",
+    gu: "ફ્લાઇટ ઓપરેશન્સ",
+    kn: "ಹಾರಾಟ ಕಾರ್ಯಾಚರಣೆಗಳು",
+    ml: "ഫ്ലൈറ്റ് പ്രവർത്തനങ്ങൾ",
+    or: "ଉଡ଼ାଣ କାର୍ଯ୍ୟାବଳୀ",
+    pa: "ਉਡਾਣ ਕਾਰਜ",
+    as: "উড়ন পৰিচালনা",
+    ur: "پرواز کی کارروائیاں"
+  },
+  "Atmospheric Dynamics": {
+    hi: "वायुमंडलीय गतिशीलता",
+    ta: "வளிமண்டல இயக்கவியல்",
+    te: "వాతావరణ గతిశీలత",
+    bn: "বায়ুমণ্ডলীয় গতিশীলতা",
+    mr: "वातावरणातील गतिशीलता",
+    gu: "વાતાવરણીય ગતિશીલતા",
+    kn: "ವಾತಾವರಣದ ಚಲನಶಾಸ್ತ್ರ",
+    ml: "വായുമണ്ഡല ചലനാത്മകത",
+    or: "ବାୟୁମଣ୍ଡଳୀୟ ଗତିଶୀଳତା",
+    pa: "ਵਾਯੂਮੰਡਲੀ ਗਤੀਸ਼ੀਲਤਾ",
+    as: "বায়ুমণ্ডলীয় গতিশীলতা",
+    ur: "فضائی حرکیات"
+  },
+  "Water Management": {
+    hi: "जल प्रबंधन",
+    ta: "நீர் மேலாண்மை",
+    te: "నీటి యాజమాన్యం",
+    bn: "জল ব্যবস্থাপনা",
+    mr: "पाणी व्यवस्थापन",
+    gu: "પાણી વ્યવસ્થાપન",
+    kn: "ನೀರು ನಿರ್ವಹಣೆ",
+    ml: "ജല പരിപാലനം",
+    or: "ଜଳ ପରିଚାଳନା",
+    pa: "ਪਾਣੀ ਪ੍ਰਬੰਧਨ",
+    as: "পানী ব্যৱস্থাপনা",
+    ur: "پانی کا انتظام"
+  },
+  "Pest & Fertilizer": {
+    hi: "कीट एवं उर्वरक",
+    ta: "பூச்சி & உர மேலாண்மை",
+    te: "తెగుళ్లు & ఎరువులు",
+    bn: "কীটপতঙ্গ ও সার",
+    mr: "कीटक व खत व्यवस्थापन",
+    gu: "જંતુ અને ખાતર",
+    kn: "ಕೀಟ ಮತ್ತು ರಸಗೊಬ್ಬರ",
+    ml: "കീടങ്ങളും വളങ്ങളും",
+    or: "କୀଟ ଓ ସାର",
+    pa: "ਕੀੜੇ ਅਤੇ ਖਾਦ",
+    as: "কীট-পতঙ্গ আৰু সাৰ",
+    ur: "کیڑے اور کھاد"
+  },
+  "Harvest Operations": {
+    hi: "कटाई एवं भंडारण",
+    ta: "அறுவடை & சேமிப்பு",
+    te: "కోత కార్యకలాపాలు",
+    bn: "ফসল কাটা ও সংরক্ষণ",
+    mr: "कापणी व साठवणूक",
+    gu: "લણણી અને સંગ્રહ",
+    kn: "ಕೊಯ್ಲು ಕಾರ್ಯಾಚರಣೆಗಳು",
+    ml: "വിളവെടുപ്പ് പ്രവർത്തനങ്ങൾ",
+    or: "ଅମଳ କାର୍ଯ୍ୟ",
+    pa: "ਵਾਢੀ ਕਾਰਜ",
+    as: "শস্য চপোৱা কাম",
+    ur: "کٹائی کے امور"
+  },
+  "Vessel Safety": {
+    hi: "नौका सुरक्षा",
+    ta: "படகு பாதுகாப்பு",
+    te: "నౌక భద్రత",
+    bn: "জাহাজ সুরক্ষা",
+    mr: "नौका सुरक्षा",
+    gu: "બોટ સુરક્ષા",
+    kn: "ದೋಣಿ ಸುರಕ್ಷತೆ",
+    ml: "ബോട്ട് സുരക്ഷ",
+    or: "ଡଙ୍ଗା ସୁରକ୍ଷା",
+    pa: "ਕਿਸ਼ਤੀ ਸੁਰੱਖਿਆ",
+    as: "নাও সুৰক্ষা",
+    ur: "جہاز کی حفاظت"
+  },
+  "Navigation": {
+    hi: "समुद्री नेविगेशन",
+    ta: "கடல் வழிசெலுத்தல்",
+    te: "నావిగేషన్",
+    bn: "নৌ চলাচল",
+    mr: "सागरी मार्गक्रमण",
+    gu: "નેવિગેશન",
+    kn: "ಸಂಚರಣೆ",
+    ml: "നാവിഗേഷൻ",
+    or: "ନୌଚାଳନା",
+    pa: "ਨੇਵੀਗੇਸ਼ਨ",
+    as: "দিকদৰ্শন",
+    ur: "جہاز رانی"
+  },
+  "Catch Opportunity": {
+    hi: "मत्स्य पालन अवसर",
+    ta: "மீன்பிடி வாய்ப்பு",
+    te: "చేపల వేట అవకాశం",
+    bn: "মাছ ধরার সুযোগ",
+    mr: "मासेमारी संधी",
+    gu: "માછીમારીની તક",
+    kn: "ಮೀನುಗಾರಿಕೆ ಅವಕಾಶ",
+    ml: "മത്സ്യബന്ധന അവസരം",
+    or: "ମାଛ ଧରିବା ସୁଯୋଗ",
+    pa: "ਮੱਛੀ ਫੜਨ ਦਾ ਮੌਕਾ",
+    as: "মাছ ধৰাৰ সুযোগ",
+    ur: "مچھلی کا شکار"
+  },
+  "Port Operations": {
+    hi: "बंदरगाह संचालन",
+    ta: "துறைமுக செயல்பாடுகள்",
+    te: "పోర్ట్ కార్యకలాపాలు",
+    bn: "বন্দর পরিচালনা",
+    mr: "बंदरगाह संचालन",
+    gu: "બંદર સંચાલન",
+    kn: "ಬಂದರು ಕಾರ್ಯಾಚರಣೆಗಳು",
+    ml: "തുറമുഖ പ്രവർത്തനങ്ങൾ",
+    or: "ବନ୍ଦର କାର୍ଯ୍ୟ",
+    pa: "ਬੰਦਰਗਾਹ ਕਾਰਜ",
+    as: "বন্দৰ পৰিচালনা",
+    ur: "بندرگاہ کی کارروائیاں"
+  },
+  "Vessel Routing": {
+    hi: "जहाज मार्ग",
+    ta: "கப்பல் பாதை வழிகாட்டல்",
+    te: "నౌక మార్గం",
+    bn: "জাহাজের পথ",
+    mr: "जहाज मार्ग",
+    gu: "જહાજ માર્ગ",
+    kn: "ಹಡಗು ಮಾರ್ಗ",
+    ml: "കപ്പൽ റൂട്ടിംഗ്",
+    or: "ଜାହାଜ ମାର୍ଗ",
+    pa: "ਜਹਾਜ਼ ਰੂਟਿੰਗ",
+    as: "জাহাজ পথ",
+    ur: "بحری جہاز کا راستہ"
+  },
+  "Deck Operations": {
+    hi: "डेक संचालन",
+    ta: "டெக் பாதுகாப்பு",
+    te: "డెక్ కార్యకలాపాలు",
+    bn: "ডেক পরিচালনা",
+    mr: "डेक संचालन",
+    gu: "ડેક કામગીરી",
+    kn: "ಡೆಕ್ ಕಾರ್ಯಾಚರಣೆಗಳು",
+    ml: "ഡെക്ക് പ്രവർത്തനങ്ങൾ",
+    or: "ଡେକ୍ କାର୍ଯ୍ୟ",
+    pa: "ਡੈੱਕ ਕਾਰਜ",
+    as: "ডেক পৰিচালনা",
+    ur: "ڈیک کی کارروائیاں"
+  },
+  "Urban Drainage": {
+    hi: "शहरी जल निकासी",
+    ta: "நகர வடிகால்",
+    te: "పట్టణ డ్రైనేజీ",
+    bn: "শহুরে নিকাশী",
+    mr: "शहरी निचरा",
+    gu: "શહેરી ડ્રેનેજ",
+    kn: "ನಗರ ಚರಂಡಿ",
+    ml: "നഗര ഡ്രെയിനേജ്",
+    or: "ସହରୀ ଜଳ ନିଷ୍କାସନ",
+    pa: "ਸ਼ਹਿਰੀ ਨਿਕਾਸੀ",
+    as: "নগৰীয়া নলা-নৰ্দমা",
+    ur: "شہری نکاسی آب"
+  },
+  "Public Health": {
+    hi: "सार्वजनिक स्वास्थ्य",
+    ta: "பொது சுகாதாரம்",
+    te: "ప్రజారోగ్యం",
+    bn: "জনস্বাস্থ্য",
+    mr: "सार्वजनिक आरोग्य",
+    gu: "જાહેર આરોગ્ય",
+    kn: "ಸಾರ್ವಜನಿಕ ಆರೋಗ್ಯ",
+    ml: "പൊതുജനാരോഗ്യം",
+    or: "ଜନସ୍ୱାସ୍ଥ୍ୟ",
+    pa: "ਜਨਤਕ ਸਿਹਤ",
+    as: "জনস্বাস্থ্য",
+    ur: "عوامی صحت"
+  },
+  "Daily Routine": {
+    hi: "दैनिक दिनचर्या",
+    ta: "தினசரி பயணம்",
+    te: "రోజువారీ దినచర్య",
+    bn: "দৈনন্দিন রুটিন",
+    mr: "दैनंदिन दिनक्रम",
+    gu: "દૈનિક દિનચર્યા",
+    kn: "ದೈನಂದಿನ ದಿನಚರಿ",
+    ml: "ദിനചര്യ",
+    or: "ଦୈନନ୍ଦିନ କାର୍ଯ୍ୟ",
+    pa: "ਰੋਜ਼ਾਨਾ ਰੁਟੀਨ",
+    as: "দৈনন্দিন কাম",
+    ur: "روزمرہ کا معمول"
+  },
+  "Wellness": {
+    hi: "स्वास्थ्य एवं सुरक्षा",
+    ta: "உடல்நலம் & பாதுகாப்பு",
+    te: "ఆరోగ్యం & సంరక్షణ",
+    bn: "স্বাস্থ্য ও সুস্থতা",
+    mr: "आरोग्य व कल्याण",
+    gu: "આરોગ્ય અને સુખાકારી",
+    kn: "ಆರೋಗ್ಯ ಮತ್ತು ಯೋಗಕ್ಷೇಮ",
+    ml: "ആരോഗ്യം",
+    or: "ସ୍ୱାସ୍ଥ୍ୟ",
+    pa: "ਸਿਹਤ ਅਤੇ ਤੰਦਰੁਸਤੀ",
+    as: "স্বাস্থ্য",
+    ur: "صحت اور تندرستی"
+  },
+
+  // Titles
+  "En-route Visibility & Cloud Ceiling": {
+    hi: "मार्ग दृश्यता और बादलों की ऊंचाई",
+    ta: "பயண பார்வைத் தூரம் & மேக உச்ச வரம்பு",
+    te: "మార్గ దృశ్యమానత & మేఘాల ఎత్తు",
+    bn: "পথের দৃশ্যমানতা ও মেঘের স্তর",
+    mr: "मार्ग दृश्यमानता आणि ढगांची मर्यादा",
+    gu: "માર્ગ દૃશ્યતા અને વાદળોની ઊંચાઈ",
+    kn: "ಮಾರ್ಗದ ಗೋಚರತೆ & ಮೋಡದ ಎತ್ತರ",
+    ml: "യാത്രാ ദൃശ്യപരത & മേഘത്തിന്റെ പരിധി",
+    or: "ମାର୍ଗ ଦୃଶ୍ୟମାନତା ଓ ମେଘ ସୀମା",
+    pa: "ਰੂਟ ਦ੍ਰਿਸ਼ਟੀਗੋਚਰਤਾ ਅਤੇ ਬੱਦਲ ਛੱਤ",
+    as: "পথৰ দৃশ্যমানতা আৰু ডাৱৰৰ উচ্চতা",
+    ur: "راستے کی حد نگاہ اور بادلوں کی اونچائی"
+  },
+  "Convective Activity & Turbulence": {
+    hi: "संवहनीय गतिविधि और विक्षोभ",
+    ta: "வெப்பச்சலன செயல்பாடு & காற்று கொந்தளிப்பு",
+    te: "సంవహన చర్య & టರ್ಬುಲೆన్స్",
+    bn: "সংবহন কার্যকলাপ ও টার্বুলেন্স",
+    mr: "संवहन हालचाली आणि हवेतील विक्षोभ",
+    gu: "કન્વેક્ટિવ પ્રવૃત્તિ અને ટર્બ્યુલન્સ",
+    kn: "ಸಂವಹನ ಚಟುವಟಿಕೆ & ಟರ್ಬುಲೆನ್ಸ್",
+    ml: "സംവഹന പ്രവർത്തനവും പ്രക്ഷുബ്ധതയും",
+    or: "ସଂବହନ କାର୍ଯ୍ୟକଳାପ ଓ ବିକ୍ଷୋଭ",
+    pa: "ਸੰਵਹਿਕ ਗਤੀਵਿਧੀ ਅਤੇ ਹਲਚਲ",
+    as: "সংবহনশীল কাৰ্যকলাপ আৰু অস্থিৰতা",
+    ur: "کنویکٹو سرگرمی اور ہوا کا دباؤ"
+  },
+  "Irrigation Scheduling": {
+    hi: "सिंचाई निर्धारण एवं प्रबंधन",
+    ta: "நீர்ப்பாசன அட்டவணை மேலாண்மை",
+    te: "నీటిపారుదల షెడ్యూల్",
+    bn: "সেচ সময়সূচী নির্ধারণ",
+    mr: "सिंचन वेळापत्रक",
+    gu: "સિંચાઈ સમયપત્રક",
+    kn: "ನೀರಾವರಿ ವೇಳಾಪಟ್ಟಿ",
+    ml: "ജലസേചന സമയക്രമം",
+    or: "ଜଳସେଚନ କାର୍ଯ୍ୟସୂଚୀ",
+    pa: "ਸਿੰਚਾਈ ਸਮਾਂ-ਸਾਰਣੀ",
+    as: "জলসিঞ্চন সময়সূচী",
+    ur: "آبپاشی کا شیڈول"
+  },
+  "Crop Protection & Spraying": {
+    hi: "फसल सुरक्षा और छिड़काव",
+    ta: "பயிர் பாதுகாப்பு & மருந்து தெளித்தல்",
+    te: "పంట రక్షణ & మందుల పిచికారీ",
+    bn: "ফসল সুরক্ষা ও স্প্রে",
+    mr: "पीक संरक्षण आणि फवारणी",
+    gu: "પાક સંરક્ષણ અને છંટકાવ",
+    kn: "ಬೆಳೆ ಸಂರಕ್ಷಣೆ & ಸಿಂಪಡಣೆ",
+    ml: "വിള സംരക്ഷണവും തളിക്കലും",
+    or: "ଫସଲ ସୁରକ୍ଷା ଓ ସ୍ପ୍ରେ",
+    pa: "ਫ਼ਸਲ ਸੁਰੱਖਿਆ ਅਤੇ ਛਿੜਕਾਅ",
+    as: "শস্য সুৰক্ষা আৰু স্প্ৰে",
+    ur: "فصل کا تحفظ اور اسپرے"
+  },
+  "Pesticide & Fertilizer Spraying": {
+    hi: "कीटनाशक एवं उर्वरक छिड़काव",
+    ta: "பூச்சிக்கொல்லி & உர தெளிப்பு",
+    te: "పురుగుమందులు & ఎరువుల పిచికారీ",
+    bn: "কীটনাশক ও সার প্রয়োগ",
+    mr: "कीटकनाशक आणि खत फवारणी",
+    gu: "જંતુનાશક અને ખાતર છંટકાવ",
+    kn: "ಕೀಟನಾಶಕ & ರಸಗೊಬ್ಬರ ಸಿಂಪಡಣೆ",
+    ml: "കീടനാശിനി, വളം പ്രയോഗം",
+    or: "କୀଟନାଶକ ଓ ସାର ପ୍ରୟୋଗ",
+    pa: "ਕੀਟਨਾਸ਼ਕ ਅਤੇ ਖਾਦ ਦਾ ਛਿੜਕਾਅ",
+    as: "কীটনাশক আৰু সাৰ প্ৰয়োগ",
+    ur: "کیڑے مار دوا اور کھاد کا اسپرے"
+  },
+  "Harvesting & Grain Storage": {
+    hi: "कटाई और अनाज भंडारण",
+    ta: "அறுவடை & தானிய சேமிப்பு",
+    te: "కోత & ధాన్యం నిల్వ",
+    bn: "ফসল তোলা ও শস্য সংরক্ষণ",
+    mr: "कापणी आणि धान्य साठवणूक",
+    gu: "લણણી અને અનાજ સંગ્રહ",
+    kn: "ಕೊಯ್ಲು & ಧಾನ್ಯ ಸಂಗ್ರಹಣೆ",
+    ml: "വിളവെടുപ്പും ധാന്യ സംഭരണവും",
+    or: "ଅମଳ ଓ ଶସ୍ୟ ସଂରକ୍ଷଣ",
+    pa: "ਵਾਢੀ ਅਤੇ ਅਨਾਜ ਭੰਡਾਰਨ",
+    as: "শস্য চপোৱা আৰু শস্য সংৰক্ষণ",
+    ur: "کٹائی اور اناج کا ذخیرہ"
+  },
+  "High Sea Warning": {
+    hi: "गहरे समुद्र की चेतावनी",
+    ta: "ஆழ்கடல் எச்சரிக்கை",
+    te: "సముద్ర ప్రమాద హెచ్చరిక",
+    bn: "গভীর সমুদ্র সতর্কতা",
+    mr: "खोल समुद्रातील धोका इशारा",
+    gu: "દરિયાઈ જોખમ ચેતવણી",
+    kn: "ಆಳ ಸಮುದ್ರದ ಎಚ್ಚರಿಕೆ",
+    ml: "ആഴക്കടൽ മുന്നറിയിപ്പ്",
+    or: "ଗଭୀର ସମୁଦ୍ର ସତର୍କତା",
+    pa: "ਡੂੰਘੇ ਸਮੁੰਦਰ ਦੀ ਚੇਤਾਵਨੀ",
+    as: "গভীৰ সাগৰীয় সতৰ্কবাৰ্তা",
+    ur: "گہرے سمندر کا انتباہ"
+  },
+  "Coastal Swell & Sea State": {
+    hi: "तटीय लहरें एवं समुद्र की स्थिति",
+    ta: "கடல் அலைகள் & தற்போதைய நிலை",
+    te: "తీర అలలు & సముద్ర స్థితి",
+    bn: "উপকূলীয় ঢেউ ও সমুদ্রের অবস্থা",
+    mr: "किनारपट्टीवरील लाटा व समुद्राची स्थिती",
+    gu: "તટીય મોજા અને દરિયાઈ સ્થિતિ",
+    kn: "ಕರಾವಳಿ ಅಲೆಗಳು & ಸಮುದ್ರದ ಸ್ಥಿತಿ",
+    ml: "തീരദേശ തിരമാലകളും കടൽ അവസ്ഥയും",
+    or: "ଉପକୂଳ ଢେଉ ଓ ସମୁଦ୍ର ସ୍ଥିତି",
+    pa: "ਤੱਟਵਰਤੀ ਲਹਿਰਾਂ ਅਤੇ ਸਮੁੰਦਰ ਦੀ ਸਥਿਤੀ",
+    as: "উপকূলীয় ঢৌ আৰু সাগৰৰ অৱস্থা",
+    ur: "ساحلی لہریں اور سمندر کی کیفیت"
+  },
+  "Fishing Operations Window": {
+    hi: "मछली पकड़ने का अनुकूल समय",
+    ta: "மீன்பிடி நேர சூழல்",
+    te: "చేపల వేట అనుకూల సమయం",
+    bn: "মাছ ধরার অনুকূল সময়",
+    mr: "मासेमारीसाठी अनुकूल वेळ",
+    gu: "માછીમારી માટે અનુકૂળ સમય",
+    kn: "ಮೀನುಗಾರಿಕೆ ಕಾರ್ಯಾಚರಣೆ ಸಮಯ",
+    ml: "മത്സ്യബന്ധന അനുകൂല സമയം",
+    or: "ମାଛ ଧରିବା ଅନୁକୂଳ ସମୟ",
+    pa: "ਮੱਛੀ ਫੜਨ ਲਈ ਅਨੁਕੂਲ ਸਮਾਂ",
+    as: "মাছ ধৰাৰ অনুকূল সময়",
+    ur: "مہی گیری کے لیے سازگار وقت"
+  },
+  "Harbour Entry & Tidal Timing": {
+    hi: "बंदरगाह प्रवेश और ज्वार समय",
+    ta: "துறைமுக நுழைவு & அலை நேரம்",
+    te: "పోర్ట్ ప్రవేశం & టైడల్ సమయం",
+    bn: "বন্দরে প্রবেশ ও জোয়ারের সময়",
+    mr: "बंदर प्रवेश आणि भरती वेळ",
+    gu: "બંદર પ્રવેશ અને ભરતીનો સમય",
+    kn: "ಬಂದರು ಪ್ರವೇಶ & ಉಬ್ಬರವಿಳಿತ ಸಮಯ",
+    ml: "തുറമുഖ പ്രവേശനവും വേലിയേറ്റ സമയവും",
+    or: "ବନ୍ଦର ପ୍ରବେଶ ଓ ଜୁଆର ସମୟ",
+    pa: "ਬੰਦਰਗਾਹ ਦਾਖਲਾ ਅਤੇ ਜਵਾਰਭਾਟਾ ਸਮਾਂ",
+    as: "বন্দৰ প্ৰৱেশ আৰু জোৱাৰৰ সময়",
+    ur: "بندرگاہ میں داخلہ اور مد و جزر کا وقت"
+  },
+  "Swell & Navigational Channel": {
+    hi: "समुद्री लहरें एवं नौवहन चैनल",
+    ta: "கடல் அலை & கப்பல் தடம்",
+    te: "సముద్ర ప్రవాహం & నావిగేషన్ మార్గం",
+    bn: "ঢেউ এবং নৌচলাচল পথ",
+    mr: "लाटा आणि सागरी वाहतूक मार्ग",
+    gu: "મોજા અને નેવિગેશનલ ચેનલ",
+    kn: "ಅಲೆಗಳು & ಸಂಚಾರ ಮಾರ್ಗ",
+    ml: "തിരമാലകളും നാവിഗേഷൻ ചാനലും",
+    or: "ଢେଉ ଓ ନୌଚାଳନା ଚ୍ୟାନେଲ୍",
+    pa: "ਲਹਿਰਾਂ ਅਤੇ ਨੇਵੀਗੇਸ਼ਨ ਚੈਨਲ",
+    as: "ঢৌ আৰু নৌপথ",
+    ur: "لہریں اور نیویگیشن چینل"
+  },
+  "Cargo Deck Safety": {
+    hi: "कार्गो डेक सुरक्षा",
+    ta: "சரக்கு டெக் பாதுகாப்பு",
+    te: "కార్గో డెక్ భద్రత",
+    bn: "কার্গো ডেক সুরক্ষা",
+    mr: "कार्गो डेक सुरक्षा",
+    gu: "કાર્ગો ડેક સુરક્ષા",
+    kn: "ಸರಕು ಡೆಕ್ ಸುರಕ್ಷತೆ",
+    ml: "കാർഗോ ഡെക്ക് സുരക്ഷ",
+    or: "କାର୍ଗୋ ଡେକ୍ ସୁରକ୍ଷା",
+    pa: "ਕਾਰਗੋ ਡੈੱਕ ਸੁਰੱਖਿਆ",
+    as: "কাৰ্গো ডেক সুৰক্ষা",
+    ur: "کارگو ڈیک کی حفاظت"
+  },
+  "Stormwater & Drainage Capacity": {
+    hi: "तूफानी जल और जल निकासी",
+    ta: "மழைநீர் & வடிகால் திறன்",
+    te: "తుఫాను నీరు & డ్రైనేజీ సామర్థ్యం",
+    bn: "বৃষ্টির জল ও নিকাশী ক্ষমতা",
+    mr: "पावसाचे पाणी आणि निचरा क्षमता",
+    gu: "વરસાદી પાણી અને ડ્રેનેજ ક્ષમતા",
+    kn: "ಮಳೆನೀರು & ಚರಂಡಿ ಸಾಮರ್ಥ್ಯ",
+    ml: "മഴവെള്ളവും ഡ്രെയിനേജ് ശേഷിയും",
+    or: "ବର୍ଷା ଜଳ ଓ ନିଷ୍କାସନ କ୍ଷମତା",
+    pa: "ਮੀਂਹ ਦਾ ਪਾਣੀ ਅਤੇ ਨਿਕਾਸੀ ਸਮਰੱਥਾ",
+    as: "বৰষুণৰ পানী আৰু নিষ্কাশন ক্ষমতা",
+    ur: "طوفانی پانی اور نکاسی کی صلاحیت"
+  },
+  "Urban Heat Island & Air Index": {
+    hi: "शहरी तापमान और वायु सूचकांक",
+    ta: "நகர வெப்பம் & காற்று தரம்",
+    te: "పట్టణ వేడి & వాయు సూచిక",
+    bn: "শহরের তাপ ও বায়ুর সূচক",
+    mr: "शहरी उष्णता आणि हवा निर्देशांक",
+    gu: "શહેરી ગરમી અને વાયુ ઇન્ડેક્સ",
+    kn: "ನಗರ ಶಾಖ & ವಾಯು ಸೂಚ್ಯಂಕ",
+    ml: "നഗര താപവും വായു സൂചികയും",
+    or: "ସହରୀ ଉତ୍ତାପ ଓ ବାୟୁ ସୂଚକାଙ୍କ",
+    pa: "ਸ਼ਹਿਰੀ ਗਰਮੀ ਅਤੇ ਹਵਾ ਸੂਚਕਾਂਕ",
+    as: "নগৰীয়া উত্তাপ আৰু বায়ু সূচক",
+    ur: "شہری گرمی اور فضائی انڈیکس"
+  },
+  "Daily Commute & Travel": {
+    hi: "दैनिक यात्रा और आवागमन",
+    ta: "தினசரி பயணம் & போக்குவரத்து",
+    te: "రోజువారీ ప్రయాణం & రవాణా",
+    bn: "দৈনিক যাতায়াত ও ভ্রমণ",
+    mr: "दैनंदिन प्रवास आणि वाहतूक",
+    gu: "દૈનિક મુસાફરી અને પરિવહન",
+    kn: "ದೈನಂದಿನ ಪ್ರಯಾಣ & ಸಂಚಾರ",
+    ml: "ദിനയാത്രയും ഗതാഗതവും",
+    or: "ଦୈନନ୍ଦିନ ଯାତ୍ରା ଓ ଗମନାଗମନ",
+    pa: "ਰੋਜ਼ਾਨਾ ਯਾਤਰਾ ਅਤੇ ਆਵਾਜਾਈ",
+    as: "দৈনন্দিন যাতায়াত আৰু ভ্ৰমণ",
+    ur: "روزمرہ کا سفر اور نقل و حرکت"
+  },
+  "Health & Sun Protection": {
+    hi: "स्वास्थ्य एवं धूप से बचाव",
+    ta: "சூரிய வெப்பம் & உடல்நல பாதுகாப்பு",
+    te: "ఆరోగ్యం & ఎండ నుండి రక్షణ",
+    bn: "স্বাস্থ্য ও রোদ থেকে সুরক্ষা",
+    mr: "आरोग्य आणि उन्हापासून संरक्षण",
+    gu: "આરોગ્ય અને સૂર્યથી રક્ષણ",
+    kn: "ಆರೋಗ್ಯ ಮತ್ತು ಸೂರ್ಯನಿಂದ ರಕ್ಷಣೆ",
+    ml: "ആരോഗ്യവും വെയിൽ സംരക്ഷണവും",
+    or: "ସ୍ୱାସ୍ଥ୍ୟ ଓ ସୂର୍ଯ୍ୟତାପରୁ ସୁରକ୍ଷା",
+    pa: "ਸਿਹਤ ਅਤੇ ਧੁੱਪ ਤੋਂ ਬਚਾਅ",
+    as: "স্বাস্থ্য আৰু ৰ'দৰ পৰা সুৰক্ষা",
+    ur: "صحت اور دھوپ سے تحفظ"
+  }
+};
+
+export const translateAdvisoryText = (text: string, lang: string): string => {
+  if (!text || lang === 'en') return text;
+
+  // Direct match
+  if (ADVISORY_TRANSLATIONS[text] && ADVISORY_TRANSLATIONS[text][lang]) {
+    return ADVISORY_TRANSLATIONS[text][lang];
+  }
+
+  // Common pattern replacements
+  let res = text;
+
+  // Pattern: METAR/Aviation Briefing: Temp X°C, Wind Y km/h @ Z°, Vis W km.
+  if (res.includes("METAR/Aviation Briefing:")) {
+    if (lang === 'ta') {
+      res = res.replace("METAR/Aviation Briefing:", "விமானப் போக்குவரத்து தகவல் (METAR):")
+               .replace("Temp", "வெப்பநிலை")
+               .replace("Wind", "காற்று")
+               .replace("Vis", "பார்வைத் தூரம்");
+    } else if (lang === 'hi') {
+      res = res.replace("METAR/Aviation Briefing:", "विमानन मौसम ब्रीफिंग (METAR):")
+               .replace("Temp", "तापमान")
+               .replace("Wind", "हवा")
+               .replace("Vis", "दृश्यता");
+    } else if (lang === 'te') {
+      res = res.replace("METAR/Aviation Briefing:", "విమానయాన బ్రీఫింగ్ (METAR):")
+               .replace("Temp", "ఉష్ణోగ్రత")
+               .replace("Wind", "గాలి")
+               .replace("Vis", "దృశ్యమానత");
+    } else if (lang === 'bn') {
+      res = res.replace("METAR/Aviation Briefing:", "বিমান আবহাওয়া ব্রিফিং (METAR):")
+               .replace("Temp", "তাপমাত্রা")
+               .replace("Wind", "বাতাস")
+               .replace("Vis", "দৃশ্যমানতা");
+    } else if (lang === 'mr') {
+      res = res.replace("METAR/Aviation Briefing:", "विमान वाहतूक हवामान (METAR):")
+               .replace("Temp", "तापमान")
+               .replace("Wind", "वारा")
+               .replace("Vis", "दृश्यमानता");
+    }
+  }
+
+  // Pattern: Surface horizontal visibility is X km.
+  if (res.includes("Surface horizontal visibility is")) {
+    if (lang === 'ta') res = res.replace("Surface horizontal visibility is", "தரை கிடைமட்ட பார்வைத் தூரம்").replace("km.", "கி.மீ.");
+    else if (lang === 'hi') res = res.replace("Surface horizontal visibility is", "सतह क्षैतिज दृश्यता").replace("km.", "किमी है।");
+    else if (lang === 'te') res = res.replace("Surface horizontal visibility is", "భూమి సమాంతర దృశ్యమానత").replace("km.", "కి.మీ.");
+    else if (lang === 'bn') res = res.replace("Surface horizontal visibility is", "পৃষ্ঠের অনুভূমিক দৃশ্যমানতা").replace("km.", "কিমি।");
+    else if (lang === 'mr') res = res.replace("Surface horizontal visibility is", "पृष्ठभागावरील क्षैतिज दृश्यमानता").replace("km.", "किमी आहे.");
+  }
+
+  // Pattern: VFR (Visual Flight Rules) conditions maintained...
+  if (res.includes("VFR (Visual Flight Rules) conditions maintained")) {
+    if (lang === 'ta') res = "VFR (காட்சிப் பறத்தல் விதிகள்) நிலைகள் சீராக உள்ளன. குறைந்த உயர மூடுபனி அல்லது ஸ்ட்ரேடஸ் மேக அபாயம் இல்லை.";
+    else if (lang === 'hi') res = "VFR (दृश्य उड़ान नियम) की स्थितियां सामान्य हैं। निचले स्तर के कोहरे या बादलों का कोई खतरा नहीं है।";
+    else if (lang === 'te') res = "VFR నిబంధనలు అనుకూలంగా ఉన్నాయి. పొగమంచు ወይም మేఘాల ప్రమాదం లేదు.";
+    else if (lang === 'bn') res = "VFR শর্তাবলী বজায় রয়েছে। নিচু মেঘ বা কুয়াশার কোনো ঝুঁকি নেই।";
+    else if (lang === 'mr') res = "VFR परिस्थिती अनुकूल आहे. कमी उंचीवरील धुके किंवा ढगांचा कोणताही धोका नाही.";
+  }
+
+  // Pattern: Cloud condition is ...
+  if (res.includes("Cloud condition is")) {
+    const rawCond = res.replace("Cloud condition is", "").replace(".", "").trim();
+    const transCond = getConditionTranslation(rawCond, lang);
+    if (lang === 'ta') res = `மேக நிலை: ${transCond}.`;
+    else if (lang === 'hi') res = `बादल की स्थिति: ${transCond}।`;
+    else if (lang === 'te') res = `మేఘాల స్థితి: ${transCond}.`;
+    else if (lang === 'bn') res = `মেঘের অবস্থা: ${transCond}।`;
+    else if (lang === 'mr') res = `ढगांची स्थिती: ${transCond}.`;
+  }
+
+  // Pattern: Light turbulence expected in lower boundary layer...
+  if (res.includes("Light turbulence expected in lower boundary layer")) {
+    if (lang === 'ta') res = "பிற்பகல் சூரிய வெப்பத்தின் போது FL050 வரை கீழ் வளிமண்டல அடுக்கில் லேசான கொந்தளிப்பு எதிர்பார்க்கப்படுகிறது.";
+    else if (lang === 'hi') res = "दोपहर के सौर ताप के दौरान FL050 तक निचली परत में हल्का विक्षोभ अपेक्षित है।";
+    else if (lang === 'te') res = "మధ్యాహ్న సమయంలో FL050 వరకు తేలికపాటి గాలి టర్బులెన్స్ ఉండవచ్చు.";
+    else if (lang === 'bn') res = "বিকেলের দিকে FL050 স্তর পর্যন্ত হালকা বায়ুর অস্থিরতা প্রত্যাশিত।";
+    else if (lang === 'mr') res = "दुपारच्या वेळी FL050 पर्यंत खालच्या थरात हलका विक्षोभ संभवतो.";
+  }
+
+  // Pattern: Maritime coastal advisory...
+  if (res.includes("Maritime coastal advisory:")) {
+    if (lang === 'ta') res = res.replace("Maritime coastal advisory:", "கடலோர கடல்சார் ஆலோசனை:").replace("Wind", "காற்று").replace("Sea state moderate with", "மிதமான அலைகளுடன்").replace("sky.", "வானம்.");
+    else if (lang === 'hi') res = res.replace("Maritime coastal advisory:", "तटीय समुद्री सलाह:").replace("Wind", "हवा").replace("Sea state moderate with", "मध्यम लहरों के साथ").replace("sky.", "आसमान।");
+  }
+
+  // Pattern: Agronomic advisory for...
+  if (res.includes("Agronomic advisory for")) {
+    if (lang === 'ta') res = res.replace("Agronomic advisory for", "விவசாய ஆலோசனை:").replace("conditions with", "வானிலையுடன்").replace("humidity", "ஈரப்பதம்");
+    else if (lang === 'hi') res = res.replace("Agronomic advisory for", "कृषि मौसम सलाह:").replace("conditions with", "स्थिति के साथ").replace("humidity", "आर्द्रता");
+  }
+
+  // Pattern: High sea warning advice
+  if (res.includes("Fishermen are strictly advised NOT to venture")) {
+    if (lang === 'ta') res = "மீனவர்கள் ஆழ்கடலில் செல்ல வேண்டாம் என எச்சரிக்கப்படுகிறார்கள். படகுகளை பாதுகாப்பான துறைமுகத்திற்கு கொண்டு வாருங்கள்.";
+    else if (lang === 'hi') res = "मछुआरों को गहरे समुद्र में न जाने की सख्त सलाह दी जाती है। नौकाओं को सुरक्षित स्थान पर ले जाएं।";
+  }
+
+  // Pattern: Safe tidal window available
+  if (res.includes("Safe tidal window available for docking")) {
+    if (lang === 'ta') res = "பகலில் படகுகளை நிறுத்தவும் மீன்களை இறக்கவும் பாதுகாப்பான அலை நேரம் உள்ளது.";
+    else if (lang === 'hi') res = "दिन के समय नौका ठहराव और मछली उतारने के लिए सुरक्षित ज्वार समय उपलब्ध है।";
+  }
+
+  // Pattern: Optimal fishing conditions
+  if (res.includes("Optimal fishing conditions across inshore")) {
+    if (lang === 'ta') res = "கடலோர மற்றும் ஆழ்கடல் பகுதிகளில் மீன்பிடிக்க சிறந்த சூழ்நிலை. நல்ல பார்வைத் தூரம் உள்ளது.";
+    else if (lang === 'hi') res = "तटीय एवं गहरे क्षेत्रों में मछली पकड़ने के लिए अनुकूल स्थिति। अच्छी दृश्यता बनी हुई है।";
+  }
+
+  return res;
+};
+
+// ================= PRECAUTIONS & DISASTER LOCALIZATION =================
+export const PRECAUTION_TRANSLATIONS: Record<string, Record<string, string>> = {
+  "Monitor live weather updates on WeatherGPT before planning travel.": {
+    hi: "यात्रा की योजना बनाने से पहले WeatherGPT पर लाइव मौसम अपडेट देखें।",
+    ta: "பயணத்தைத் திட்டமிடும் முன் WeatherGPT இல் நேரடி வானிலை தகவல்களை சரிபார்க்கவும்.",
+    te: "ప్రయాణాన్ని ప్లాన్ చేసే ముందు WeatherGPT లో ప్రత్యక్ష వాతావరణ సమాచారాన్ని చూడండి.",
+    bn: "ভ্রমণের পরিকল্পনা করার আগে WeatherGPT-তে লাইভ আবহাওয়ার আপডেট দেখুন।",
+    mr: "प्रवासाचे नियोजन करण्यापूर्वी WeatherGPT वर थेट हवामान अंदाज तपासा.",
+    gu: "મુસાફરીનું આયોજન કરતા પહેલા WeatherGPT પર લાઈવ હવામાન અપડેટ્સ જુઓ.",
+    kn: "ಪ್ರಯಾಣವನ್ನು ಯೋಜಿಸುವ ಮೊದಲು WeatherGPT ಯಲ್ಲಿ ಲೈವ್ ಹವಾಮಾನ ಅಪ್‌ಡೇಟ್‌ಗಳನ್ನು ಪರಿಶೀಲಿಸಿ.",
+    ml: "യാത്ര പ്ലാൻ ചെയ്യുന്നതിന് മുൻപ് WeatherGPT-യിൽ തത്സമയ കാലാവസ്ഥാ വിവരങ്ങൾ പരിശോധിക്കുക.",
+    or: "ଯାତ୍ରା ଯୋଜନା କରିବା ପୂର୍ବରୁ WeatherGPT ରେ ଲାଇଭ୍ ପାଣିପାଗ ଅପଡେଟ୍ ଯାଞ୍ଚ କରନ୍ତୁ।",
+    pa: "ਯਾਤਰਾ ਦੀ ਯੋਜਨਾ ਬਣਾਉਣ ਤੋਂ ਪਹਿਲਾਂ WeatherGPT 'ਤੇ ਲਾਈਵ ਮੌਸਮ ਅਪਡੇਟ ਦੇਖੋ।",
+    as: "যাত্ৰা পৰিকল্পনা কৰাৰ পূৰ্বে WeatherGPT ত লাইভ বতৰৰ আপডেট চাওক।",
+    ur: "سفر کی منصوبہ بندی سے پہلے WeatherGPT پر لائیو موسم کی معلومات چیک کریں۔"
+  },
+  "Carry an umbrella or rain poncho during monsoon conditions.": {
+    hi: "मानसून के दौरान छाता या रेनकोट साथ रखें।",
+    ta: "பருவமழை காலங்களில் குடை அல்லது மழைக்கோட் எடுத்துச் செல்லவும்.",
+    te: "వర్షాకాలంలో గొడుగు లేదా రెయిన్‌కోట్ వెంట తీసుకెళ్లండి.",
+    bn: "বর্ষাকালে সঙ্গে ছাতা বা রেইনকোট রাখুন।",
+    mr: "पावसाळ्यात छत्री किंवा रेनकोट सोबत ठेवा.",
+    gu: "ચોમાસા દરમિયાન છત્રી અથવા રેઈનકોટ સાથે રાખો.",
+    kn: "ಮುಂಗಾರು ಸಮಯದಲ್ಲಿ ಛತ್ರಿ ಅಥವಾ ರೇನ್‌ಕೋಟ್ ಜೊತೆಯಲ್ಲಿಡಿ.",
+    ml: "മഴക്കാലത്ത് കുടയോ റെയിൻകോട്ടോ കൂടെ കരുതുക.",
+    or: "ମୌସୁମୀ ସମୟରେ ଛତା କିମ୍ବା ରେନକୋଟ୍ ସାଙ୍ଗରେ ରଖନ୍ତୁ।",
+    pa: "ਮਾਨਸੂਨ ਦੌਰਾਨ ਛਤਰੀ ਜਾਂ ਰੇਨਕੋਟ ਨਾਲ ਰੱਖੋ।",
+    as: "বাৰিষা কালত ছাতি বা ৰেইনকোট লগত ৰাখক।",
+    ur: "مانسون کے دوران چھتری یا رین کوٹ ساتھ رکھیں۔"
+  },
+  "Keep local emergency numbers saved on speed dial.": {
+    hi: "स्थानीय आपातकालीन नंबर स्पीड डायल पर सुरक्षित रखें।",
+    ta: "உள்ளூர் அவசர உதவி எண்களை ஸ்பீட் டயலில் சேமித்து வைக்கவும்.",
+    te: "స్థానిక అత్యవసర నంబర్లను స్పీడ్ డయల్‌లో సేవ్ చేసుకోండి.",
+    bn: "স্থানীয় জরুরী নম্বরগুলি স্পিড ডায়ালে সেভ করে রাখুন।",
+    mr: "स्थानिक आपत्कालीन क्रमांक स्पीड डायलवर सेव्ह करून ठेवा.",
+    gu: "સ્થાનિક કટોકટી નંબરો સ્પીડ ડાયલ પર સાચવી રાખો.",
+    kn: "ಸ್ಥಳೀಯ ತುರ್ತು ಸಂಖ್ಯೆಗಳನ್ನು ಸ್ಪೀಡ್ ಡಯಲ್‌ನಲ್ಲಿ ಉಳಿಸಿಕೊಳ್ಳಿ.",
+    ml: "പ്രാദേശിക അടിയന്തര നമ്പറുകൾ സ്പീഡ് ഡയലിൽ സൂക്ഷിക്കുക.",
+    or: "ସ୍ଥାନୀୟ ଜରୁରୀକାଳୀନ ନମ୍ବର ସ୍ପିଡ୍ ଡାଏଲ୍‌ରେ ସାଇତି ରଖନ୍ତୁ।",
+    pa: "ਸਥਾਨਕ ਐਮਰਜੈਂਸੀ ਨੰਬਰ ਸਪੀਡ ਡਾਇਲ 'ਤੇ ਸੇਵ ਰੱਖੋ।",
+    as: "স্থানীয় জৰুৰীকালীন নম্বৰসমূহ স্পীড ডায়েলত সংৰক্ষণ কৰক।",
+    ur: "مقامی ہنگامی نمبرز اسپیڈ ڈائل پر محفوظ رکھیں۔"
+  },
+  "Do not ignore severe weather color codes (Orange / Red alert).": {
+    hi: "गंभीर मौसम चेतावनी रंग कोड (ऑरेंज / रेड अलर्ट) को नजरअंदाज न करें।",
+    ta: "தீவிர வானிலை எச்சரிக்கை வண்ணக் குறியீடுகளை (ஆரஞ்சு / சிவப்பு எச்சரிக்கை) புறக்கணிக்காதீர்கள்.",
+    te: "తీవ్రమైన వాతావరణ కలర్ కోడ్‌లను (ఆరెంజ్ / రెడ్ అలర్ట్) నిర్లక్ష్యం చేయవద్దు.",
+    bn: "গুরুতর আবহাওয়া সতর্কতার রঙের সংকেত (কমলা / লাল সতর্কতা) উপেক্ষা করবেন না।",
+    mr: "गंभीर हवामान चेतावणी रंग कोड (ऑरेंज / रेड अलर्ट) दुर्लक्षित करू नका.",
+    gu: "ગંભીર હવામાન રંગ કોડ્સ (નારંગી / લાલ ચેતવણી) અવગણશો નહીં.",
+    kn: "ತೀವ್ರ ಹವಾಮಾನ ಎಚ್ಚರಿಕೆ ಬಣ್ಣ ಸಂಕೇತಗಳನ್ನು (ಕಿತ್ತಳೆ / ಕೆಂಪು ಎಚ್ಚರಿಕೆ) ನಿರ್ಲಕ್ಷಿಸಬೇಡಿ.",
+    ml: "തീവ്ര കാലാവസ്ഥാ മുന്നറിയിപ്പ് വർണ്ണ കോഡുകൾ (ഓറഞ്ച് / റെഡ് അലേർട്ട്) അവഗണിക്കരുത്.",
+    or: "ଗୁରୁତର ପାଣିପାଗ ରଙ୍ଗ କୋଡ୍ (ଅରେଞ୍ଜ / ରେଡ୍ ଆଲର୍ଟ) କୁ ଅଣଦେଖା କରନ୍ତୁ ନାହିଁ।",
+    pa: "ਗੰਭੀਰ ਮੌਸਮ ਚੇਤਾਵਨੀ ਰੰਗ ਕੋਡ (ਸੰਤਰੀ / ਲਾਲ ਅਲਰਟ) ਨੂੰ ਨਜ਼ਰਅੰਦਾਜ਼ ਨਾ ਕਰੋ।",
+    as: "গুৰুতৰ বতৰৰ সতৰ্কতা সংকেত (কমলা / ৰঙা এলাৰ্ট) আওকাণ নকৰিব।",
+    ur: "شدید موسمی رنگین کوڈز (اورینج / ریڈ الرٹ) کو نظر انداز نہ کریں۔"
+  },
+  "Avoid panic buying; keep moderate essential reserves.": {
+    hi: "घबराकर अत्यधिक खरीदारी से बचें; सीमित आवश्यक वस्तुएं सुरक्षित रखें।",
+    ta: "பதற்றத்தில் அதிக பொருட்கள் வாங்குவதைத் தவிர்க்கவும்; தேவையான அத்தியாவசிய பொருட்களை மட்டும் சேமிக்கவும்.",
+    te: "ఆందోళనతో అధిక కొనుగోళ్లు చేయవద్దు; అవసరమైన నిల్వలను మాత్రమే ఉంచండి.",
+    bn: "আতঙ্কিত হয়ে অতিরিক্ত কেনাকাটা এড়িয়ে চলুন; প্রয়োজনীয় দ্রব্যাদি সীমিত রাখুন।",
+    mr: "घाबरून अनावश्यक खरेदी टाळा; आवश्यक वस्तूंचा पुरेसा साठा ठेवा.",
+    gu: "ગભરાઈને વધુ ખરીદી ટાળો; જરૂરી સામાનનો મધ્યમ જથ્થો રાખો.",
+    kn: "ಆತಂಕದಿಂದ ಅಧಿಕ ಖರೀದಿ ಮಾಡಬೇಡಿ; ಅಗತ್ಯ ವಸ್ತುಗಳನ್ನು ಮಿತವಾಗಿ ಸಂಗ್ರಹಿಸಿ.",
+    ml: "പരിഭ്രാന്തരായി അമിത സാധനങ്ങൾ വാങ്ങുന്നത് ഒഴിവാക്കുക; അത്യാവശ്യ സാധനങ്ങൾ കരുതുക.",
+    or: "ଭୟଭୀତ ହୋଇ ଅଧିକ କିଣାକିଣି କରନ୍ତୁ ନାହିଁ; ଆବଶ୍ୟକ ସାମଗ୍ରୀ ସାଇତି ରଖନ୍ତୁ।",
+    pa: "ਘਬਰਾਹਟ ਵਿੱਚ ਖਰੀਦਦਾਰੀ ਤੋਂ ਬਚੋ; ਜ਼ਰੂਰੀ ਵਸਤਾਂ ਦਾ ਸੀਮਤ ਭੰਡਾਰ ਰੱਖੋ।",
+    as: "আতংকিত হৈ অধিক সামগ্ৰী ক্ৰয় নকৰিব; প্ৰয়োজনীয় সামগ্ৰী সাঁচি ৰাখক।",
+    ur: "خوف میں غیر ضروری خریداری سے بچیں؛ مناسب ضروری ذخیرہ رکھیں۔"
+  },
+  "Keep emergency battery lights, first-aid kit, and canned food handy.": {
+    hi: "इमरजेंसी लाइट, प्राथमिक चिकित्सा किट और सूखा भोजन तैयार रखें।",
+    ta: "அவசர பேட்டரி விளக்குகள், முதலுதவி பெட்டி & உணவுப் பொருட்களை தயாராக வைக்கவும்.",
+    te: "ఎమర్జెన్సీ లైట్లు, ప్రథమ చికిత్స కిట్ మరియు ఆహారాన్ని సిద్ధంగా ఉంచుకోండి.",
+    bn: "জরুরী আলো, প্রাথমিক চিকিৎসার কিট ও শুকনো খাবার প্রস্তুত রাখুন।"
+  },
+  "Stay tuned to official IMD/NDMA weather bulletins.": {
+    hi: "आधिकारिक IMD/NDMA मौसम बुलेटिन सुनते रहें।",
+    ta: "அதிகாரப்பூர்வ IMD/NDMA வானிலை அறிவிப்புகளை தொடர்ந்து கவனிக்கவும்.",
+    te: "అధికారిక IMD/NDMA వాతావరణ బులెటిన్లను గమనించండి.",
+    bn: "সরকারি IMD/NDMA আবহাওয়া বার্তা শুনুন।"
+  },
+  "Board up glass windows or put tape cross marks.": {
+    hi: "कांच की खिड़कियों को सुरक्षित करें या टेप लगाएं।",
+    ta: "கண்ணாடி ஜன்னல்களைப் பாதுகாக்கவும் அல்லது டேப் ஒட்டவும்.",
+    te: "గాజు కిటికీలను భద్రపరచండి లేదా టేప్ వేయండి."
+  },
+  "Fishermen must stay ashore and anchor boats safely.": {
+    hi: "मछुआरे किनारे पर ही रहें और नौकाओं को सुरक्षित बांधें।",
+    ta: "மீனவர்கள் கடலுக்குச் செல்லாமல் படகுகளைப் பாதுகாப்பாகக் கட்டவும்.",
+    te: "మత్స్యకారులు తీరంలోనే ఉండి పడవలను సురక్షితంగా కట్టాలి."
+  },
+  "Move to higher ground if living in low-lying coastal zones.": {
+    hi: "निचले तटीय क्षेत्रों में रहने वाले लोग ऊंचे स्थानों पर जाएं।",
+    ta: "தாழ்வான கடலோரப் பகுதிகளில் வசிப்பவர்கள் மேடான இடங்களுக்குச் செல்லவும்.",
+    te: "తీరప్రాంత లోతట్టు ప్రజలు ఎత్తైన ప్రదేశాలకు వెళ్లాలి."
+  },
+  "Do not venture out into the sea or near coastal waters.": {
+    hi: "समुद्र में या तटीय पानी के पास बिल्कुल न जाएं।",
+    ta: "கடலிலோ அல்லது கடலோரப் பகுதிகளிலோ செல்ல வேண்டாம்.",
+    te: "సముద్రంలోకి లేదా తీరప్రాంతాలకు వెళ్లవద్దు."
+  },
+  "Do not touch fallen electric wires or poles.": {
+    hi: "गिरे हुए बिजली के तारों या खंभों को न छुएं।",
+    ta: "அறுந்து விழுந்த மின்சாரக் கம்பிகள் அல்லது கம்பங்களைத் தொடாதீர்கள்.",
+    te: "కూలిపోయిన విద్యుత్ స్తంభాలు, వైర్లను తాకవద్దు."
+  },
+  "Avoid driving through flooded underpasses or causeways.": {
+    hi: "जलमग्न अंडरपास या पुलों से वाहन न चलाएं।",
+    ta: "வெள்ளம் சூழ்ந்த பாலங்கள் அல்லது சுரங்கப்பாதைகளில் வாகனம் ஓட்டுவதைத் தவிர்க்கவும்.",
+    te: "వరద నీరు ఉన్న రోడ్లు, అండర్‌పాస్‌లలో వాహనాలు నడపవద్దు."
+  },
+  "Do not spread unverified rumors on social messaging.": {
+    hi: "सोशल मीडिया पर अपुष्ट अफवाहें न फैलाएं।",
+    ta: "சமூக வலைதளங்களில் உறுதிப்படுத்தப்படாத வதந்திகளைப் பரப்பாதீர்கள்.",
+    te: "సోషల్ మీడియాలో ధృవీకరించని పుకార్లను వ్యాప్తి చేయవద్దు."
+  },
+  "Drink plenty of water and oral rehydration fluids (ORS, lassi, coconut water).": {
+    hi: "भरपूर पानी और ओआरएस, छाछ या नारियल पानी पिएं।",
+    ta: "நிறைய தண்ணீர், ORS, மோர் அல்லது இளநீர் அருந்தவும்.",
+    te: "పుష్కలంగా నీరు, ఓఆర్ఎస్, మజ్జిగ లేదా కొబ్బరి నీళ్లు తాగండి."
+  },
+  "Wear lightweight, loose-fitting, light-colored cotton clothes.": {
+    hi: "हल्के, ढीले और हल्के रंग के सूती कपड़े पहनें।",
+    ta: "லேசான, தளர்வான, வெளிர் நிற பருத்தி ஆடைகளை அணியவும்.",
+    te: "తేలికపాటి, వదులైన కాటన్ దుస్తులు ధరించండి."
+  },
+  "Cover your head with a hat, umbrella, or cloth when outside.": {
+    hi: "बाहर निकलते समय टोपी, छाते या कपड़े से सिर ढकें।",
+    ta: "வெளியே செல்லும்போது தொப்பி, குடை அல்லது துணியால் தலையை மூடவும்.",
+    te: "బయటకు వెళ్ళేటప్పుడు టోపీ, గొడుగు లేదా గుడ్డతో తల కప్పుకోండి."
+  },
+  "Keep livestock in shaded areas and provide ample drinking water.": {
+    hi: "पशुओं को छायादार स्थानों पर रखें और पर्याप्त पानी दें।",
+    ta: "கால்நடைகளை நிழலான இடங்களில் வைத்து போதிய குடிநீர் வழங்கவும்.",
+    te: "పశువులను నీడలో ఉంచి తగినంత తాగునీరు అందించండి."
+  },
+  "Schedule heavy farm/field activities during early morning or late evening.": {
+    hi: "खेतों के भारी काम सुबह जल्दी या देर शाम को करें।",
+    ta: "கடினமான விவசாய வேலைகளை அதிகாலை அல்லது மாலையில் திட்டமிடுங்கள்.",
+    te: "వ్యవసాయ పనులను తెల్లవారుజామున లేదా సాయంత్రం వేళల్లో చేయండి."
+  },
+  "Do not step out directly into peak sun between 12:00 PM and 3:30 PM.": {
+    hi: "दोपहर 12:00 से 3:30 बजे के बीच सीधे धूप में न निकलें।",
+    ta: "மதியம் 12:00 மணி முதல் 3:30 மணி வரை கடுமையான வெயிலில் செல்வதைத் தவிர்க்கவும்.",
+    te: "మధ్యాహ్నం 12:00 నుండి 3:30 గంటల మధ్య నేరుగా ఎండలోకి వెళ్లవద్దు."
+  },
+  "Never leave children or pets locked in closed vehicles.": {
+    hi: "बच्चों या पालतू जानवरों को बंद वाहनों में कभी न छोड़ें।",
+    ta: "குழந்தைகள் அல்லது செல்லப்பிராணிகளை பூட்டிய வாகனங்களில் விட்டுச் செல்லாதீர்கள்.",
+    te: "పిల్లలను లేదా పెంపుడు జంతువులను మూసివున్న వాహనాల్లో ఉంచవద్దు."
+  }
+};
+
+export const EMERGENCY_CONTACT_TRANSLATIONS: Record<string, Record<string, string>> = {
+  "NDMA Disaster Helpline": {
+    hi: "एनडीएमए आपदा हेल्पलाइन",
+    ta: "NDMA பேரிடர் உதவி எண்",
+    te: "NDMA విపత్తు హెల్ప్‌లైన్",
+    bn: "NDMA দুর্যোগ হেল্পলাইন",
+    mr: "NDMA आपत्ती हेल्पलाइन"
+  },
+  "State Disaster Control": {
+    hi: "राज्य आपदा नियंत्रण",
+    ta: "மாநில பேரிடர் கட்டுப்பாட்டு மையம்",
+    te: "రాష్ట్ర విపత్తు నియంత్రణ",
+    bn: "রাজ্য দুর্যোগ নিয়ন্ত্রণ",
+    mr: "राज्य आपत्ती नियंत्रण"
+  },
+  "Coast Guard Distress": {
+    hi: "तटरक्षक आपातकालीन सेवा",
+    ta: "கடலோர காவல்படை உதவி",
+    te: "కోస్ట్ గార్డ్ అత్యవసర సేవ",
+    bn: "কোস্ট গার্ড জরুরী সেবা",
+    mr: "तटरक्षक आपत्कालीन सेवा"
+  },
+  "Ambulance / Emergency": {
+    hi: "एम्बुलेंस / आपातकालीन",
+    ta: "ஆம்புலன்ஸ் / அவசர சேவை",
+    te: "అంబులెన్స్ / అత్యవసరం",
+    bn: "অ্যাম্বুলেন্স / জরুরী",
+    mr: "रुग्णवाहिका / आपत्कालीन"
+  },
+  "National Emergency Helpline": {
+    hi: "राष्ट्रीय आपातकालीन हेल्पलाइन",
+    ta: "தேசிய அவசர உதவி எண்",
+    te: "జాతీయ అత్యవసర హెల్ప్‌లైన్",
+    bn: "জাতীয় জরুরী হেল্পলাইন",
+    mr: "राष्ट्रीय आपत्कालीन हेल्पलाइन"
+  }
+};
+
+export const translatePrecaution = (text: string, lang: string): string => {
+  if (!text || lang === 'en') return text;
+  const match = PRECAUTION_TRANSLATIONS[text];
+  if (match && match[lang]) return match[lang];
+  return text;
+};
+
+export const translateEmergencyContact = (label: string, lang: string): string => {
+  if (!label || lang === 'en') return label;
+  const match = EMERGENCY_CONTACT_TRANSLATIONS[label];
+  if (match && match[lang]) return match[lang];
+  return label;
 };

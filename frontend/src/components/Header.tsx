@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { CloudSun, MapPin, ChevronDown, Crosshair, Navigation, Download, Sparkles } from 'lucide-react';
+import { getTranslation } from '../i18n/translations';
 
 interface HeaderProps {
   currentCity: string;
+  language?: string;
   onSelectCity: (city: string, lat: number, lon: number) => void;
   onTriggerGPS?: () => void;
 }
@@ -21,7 +23,7 @@ const POPULAR_CITIES = [
   { name: 'Guwahati', lat: 26.1445, lon: 91.7362, state: 'Assam' },
 ];
 
-export const Header: React.FC<HeaderProps> = ({ currentCity, onSelectCity, onTriggerGPS }) => {
+export const Header: React.FC<HeaderProps> = ({ currentCity, language = 'en', onSelectCity, onTriggerGPS }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -95,7 +97,7 @@ export const Header: React.FC<HeaderProps> = ({ currentCity, onSelectCity, onTri
             title="Download & Install WeatherGPT App"
           >
             <Download className="w-3 h-3 animate-bounce" />
-            <span className="hidden sm:inline">Install</span>
+            <span className="hidden sm:inline">{getTranslation(language, 'install_app')}</span>
           </button>
         )}
 
@@ -134,11 +136,11 @@ export const Header: React.FC<HeaderProps> = ({ currentCity, onSelectCity, onTri
                   className="w-full text-left px-3 py-2.5 rounded-2xl text-xs font-extrabold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 hover:bg-sky-100 dark:hover:bg-sky-900/60 flex items-center space-x-2 transition-colors mb-2 border border-sky-200 dark:border-sky-800/80 shadow-xs"
                 >
                   <Navigation className="w-3.5 h-3.5 text-sky-500 animate-pulse shrink-0" />
-                  <span className="truncate">Use Current Live Location (GPS)</span>
+                  <span className="truncate">{getTranslation(language, 'use_live_gps')}</span>
                 </button>
 
                 <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider px-3 py-1 mb-1">
-                  Popular Indian Hubs
+                  {getTranslation(language, 'popular_hubs')}
                 </div>
 
                 <div className="max-h-56 overflow-y-auto space-y-0.5 pr-0.5">

@@ -168,41 +168,41 @@ export const api = {
     return res.data;
   },
 
-  getAdvisory: async (profession: string, lat: number, lon: number): Promise<AdvisoryResponse> => {
-    const key = `advisory_${profession}_${lat.toFixed(3)}_${lon.toFixed(3)}`;
+  getAdvisory: async (profession: string, lat: number, lon: number, lang: string = 'en'): Promise<AdvisoryResponse> => {
+    const key = `advisory_${profession}_${lat.toFixed(3)}_${lon.toFixed(3)}_${lang}`;
     return deduplicatedFetch<AdvisoryResponse>(key, async () => {
       const res = await apiClient.get<AdvisoryResponse>('/advisory', {
-        params: { profession, lat, lon }
+        params: { profession, lat, lon, lang }
       });
       return res.data;
     }, 300000);
   },
 
-  getActiveAlerts: async (lat: number, lon: number): Promise<ActiveAlertsResponse> => {
-    const key = `alerts_${lat.toFixed(3)}_${lon.toFixed(3)}`;
+  getActiveAlerts: async (lat: number, lon: number, lang: string = 'en'): Promise<ActiveAlertsResponse> => {
+    const key = `alerts_${lat.toFixed(3)}_${lon.toFixed(3)}_${lang}`;
     return deduplicatedFetch<ActiveAlertsResponse>(key, async () => {
       const res = await apiClient.get<ActiveAlertsResponse>('/alerts/active', {
-        params: { lat, lon }
+        params: { lat, lon, lang }
       });
       return res.data;
     }, 180000);
   },
 
-  getAlertPrecautions: async (alertId: string, alertType?: string, severity?: string) => {
-    const key = `precautions_${alertId}_${alertType}_${severity}`;
+  getAlertPrecautions: async (alertId: string, alertType?: string, severity?: string, lang: string = 'en') => {
+    const key = `precautions_${alertId}_${alertType}_${severity}_${lang}`;
     return deduplicatedFetch(key, async () => {
       const res = await apiClient.get(`/alerts/${alertId}/precautions`, {
-        params: { alert_type: alertType, severity }
+        params: { alert_type: alertType, severity, lang }
       });
       return res.data;
     }, 600000);
   },
 
-  getResearchMetrics: async (category: string, lat: number, lon: number): Promise<ResearchMetricsResponse> => {
-    const key = `research_metrics_${category}_${lat.toFixed(3)}_${lon.toFixed(3)}`;
+  getResearchMetrics: async (category: string, lat: number, lon: number, lang: string = 'en'): Promise<ResearchMetricsResponse> => {
+    const key = `research_metrics_${category}_${lat.toFixed(3)}_${lon.toFixed(3)}_${lang}`;
     return deduplicatedFetch<ResearchMetricsResponse>(key, async () => {
       const res = await apiClient.get<ResearchMetricsResponse>('/research/metrics', {
-        params: { category, lat, lon }
+        params: { category, lat, lon, lang }
       });
       return res.data;
     }, 300000);

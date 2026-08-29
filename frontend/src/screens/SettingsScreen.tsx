@@ -189,7 +189,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-md shadow-slate-200/40 dark:shadow-none">
           <div className="flex items-center space-x-2 text-sky-600 dark:text-sky-400 font-black text-xs mb-3">
             <Globe2 className="w-4 h-4" />
-            <span>Display & Assistant Language</span>
+            <span>{getTranslation(currentLanguage, 'display_language')}</span>
           </div>
 
           <div className="grid grid-cols-3 gap-2">

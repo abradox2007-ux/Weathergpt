@@ -41,6 +41,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       {/* 1. App Header */}
       <Header
         currentCity={currentCity}
+        language={language}
         onSelectCity={onSelectCity}
         onTriggerGPS={onTriggerGPS}
       />
