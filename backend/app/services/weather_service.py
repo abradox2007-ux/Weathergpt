@@ -103,6 +103,7 @@ class WeatherService:
                     "longitude": lon,
                     "current": "temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m",
                     "hourly": "uv_index,visibility",
+                    "forecast_days": 1,
                     "timezone": "auto"
                 }
             )
