@@ -168,74 +168,114 @@ export const MapRadarPreview: React.FC<MapRadarPreviewProps> = ({
   useEffect(() => {
     if (!previewContainerRef.current) return;
 
-    if (!previewMapRef.current) {
-      const map = L.map(previewContainerRef.current, {
-        center: [lat, lon],
-        zoom: 7,
-        zoomControl: false,
-        attributionControl: false,
-      });
+    try {
+      if (!previewMapRef.current) {
+        // Reset leaflet id on container if leftover from previous render
+        if ((previewContainerRef.current as any)._leaflet_id != null) {
+          (previewContainerRef.current as any)._leaflet_id = null;
+        }
 
-      L.tileLayer(BASE_MAP_TILES, BASE_MAP_OPTIONS).addTo(map);
+        const map = L.map(previewContainerRef.current, {
+          center: [lat, lon],
+          zoom: 7,
+          zoomControl: false,
+          attributionControl: false,
+        });
 
-      const marker = L.marker([lat, lon], { icon: createCustomIcon(city) }).addTo(map);
+        L.tileLayer(BASE_MAP_TILES, BASE_MAP_OPTIONS).addTo(map);
 
-      previewMapRef.current = map;
-      previewMarkerRef.current = marker;
-    } else {
-      previewMapRef.current.setView([lat, lon], previewMapRef.current.getZoom());
-      if (previewMarkerRef.current) {
-        previewMarkerRef.current.setLatLng([lat, lon]);
-        previewMarkerRef.current.setIcon(createCustomIcon(city));
+        const marker = L.marker([lat, lon], { icon: createCustomIcon(city) }).addTo(map);
+
+        previewMapRef.current = map;
+        previewMarkerRef.current = marker;
+      } else {
+        previewMapRef.current.setView([lat, lon], previewMapRef.current.getZoom());
+        if (previewMarkerRef.current) {
+          previewMarkerRef.current.setLatLng([lat, lon]);
+          previewMarkerRef.current.setIcon(createCustomIcon(city));
+        }
       }
+
+      renderHubMarkers(previewMapRef.current, previewHubsGroupRef);
+      applyLayerToMap(previewMapRef.current, previewOverlayRef, previewCanvasRef, previewAnimRef);
+
+      setTimeout(() => {
+        try {
+          previewMapRef.current?.invalidateSize();
+        } catch {}
+      }, 200);
+    } catch (err) {
+      console.warn('Preview map init error caught:', err);
     }
 
-    renderHubMarkers(previewMapRef.current, previewHubsGroupRef);
-    applyLayerToMap(previewMapRef.current, previewOverlayRef, previewCanvasRef, previewAnimRef);
-
-    setTimeout(() => {
-      previewMapRef.current?.invalidateSize();
-    }, 200);
+    return () => {
+      // Safe cleanup on unmount
+      if (previewMapRef.current) {
+        try {
+          previewMapRef.current.remove();
+        } catch {}
+        previewMapRef.current = null;
+      }
+    };
   }, [lat, lon, city, activeLayer, currentFrameIndex, radarTimestamps]);
 
   // 2. Initialize Expanded Modal Map
   useEffect(() => {
     if (!isModalOpen || !modalContainerRef.current) return;
 
-    if (!modalMapRef.current) {
-      const map = L.map(modalContainerRef.current, {
-        center: [lat, lon],
-        zoom: 7,
-        zoomControl: false,
-        attributionControl: false,
-      });
+    let timer: any;
+    try {
+      if (!modalMapRef.current) {
+        if ((modalContainerRef.current as any)._leaflet_id != null) {
+          (modalContainerRef.current as any)._leaflet_id = null;
+        }
 
-      L.tileLayer(BASE_MAP_TILES, BASE_MAP_OPTIONS).addTo(map);
+        const map = L.map(modalContainerRef.current, {
+          center: [lat, lon],
+          zoom: 7,
+          zoomControl: false,
+          attributionControl: false,
+        });
 
-      const marker = L.marker([lat, lon], { icon: createCustomIcon(city) }).addTo(map);
+        L.tileLayer(BASE_MAP_TILES, BASE_MAP_OPTIONS).addTo(map);
 
-      modalMapRef.current = map;
-      modalMarkerRef.current = marker;
+        const marker = L.marker([lat, lon], { icon: createCustomIcon(city) }).addTo(map);
 
-      map.on('move', () => {
-        if (activeLayer === 'wind') startWindAnimation(modalCanvasRef, modalAnimRef);
-      });
-    } else {
-      modalMapRef.current.setView([lat, lon], modalMapRef.current.getZoom());
-      if (modalMarkerRef.current) {
-        modalMarkerRef.current.setLatLng([lat, lon]);
-        modalMarkerRef.current.setIcon(createCustomIcon(city));
+        modalMapRef.current = map;
+        modalMarkerRef.current = marker;
+
+        map.on('move', () => {
+          if (activeLayer === 'wind') startWindAnimation(modalCanvasRef, modalAnimRef);
+        });
+      } else {
+        modalMapRef.current.setView([lat, lon], modalMapRef.current.getZoom());
+        if (modalMarkerRef.current) {
+          modalMarkerRef.current.setLatLng([lat, lon]);
+          modalMarkerRef.current.setIcon(createCustomIcon(city));
+        }
       }
+
+      renderHubMarkers(modalMapRef.current, modalHubsGroupRef);
+      applyLayerToMap(modalMapRef.current, modalOverlayRef, modalCanvasRef, modalAnimRef);
+
+      timer = setTimeout(() => {
+        try {
+          modalMapRef.current?.invalidateSize();
+        } catch {}
+      }, 200);
+    } catch (err) {
+      console.warn('Modal map init error caught:', err);
     }
 
-    renderHubMarkers(modalMapRef.current, modalHubsGroupRef);
-    applyLayerToMap(modalMapRef.current, modalOverlayRef, modalCanvasRef, modalAnimRef);
-
-    const timer = setTimeout(() => {
-      modalMapRef.current?.invalidateSize();
-    }, 200);
-
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      if (modalMapRef.current) {
+        try {
+          modalMapRef.current.remove();
+        } catch {}
+        modalMapRef.current = null;
+      }
+    };
   }, [isModalOpen, lat, lon, city, activeLayer, currentFrameIndex, radarTimestamps]);
 
   const applyLayerToMap = (

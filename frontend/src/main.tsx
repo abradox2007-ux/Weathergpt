@@ -26,27 +26,44 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     console.error('WeatherGPT Uncaught Error:', error, errorInfo);
   }
 
-  handleReload = () => {
-    localStorage.removeItem('weathergpt_onboarding_done');
-    window.location.reload();
+  handleReload = async () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.unregister();
+        }
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        for (const key of keys) {
+          await caches.delete(key);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    window.location.href = window.location.origin + '?refresh=' + Date.now();
   };
 
   render() {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center">
-          <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-sky-500 to-amber-400 flex items-center justify-center mb-4 shadow-xl">
-            <span className="text-2xl">🌦️</span>
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-500 via-cyan-400 to-amber-400 flex items-center justify-center mb-4 shadow-xl shadow-sky-500/25">
+            <span className="text-3xl">🌦️</span>
           </div>
           <h1 className="text-xl font-black mb-2">WeatherGPT</h1>
-          <p className="text-xs text-slate-400 mb-6 max-w-xs">
-            An update was downloaded. Tap below to reload the latest version.
+          <p className="text-xs text-slate-400 mb-6 max-w-xs leading-relaxed">
+            A new version of WeatherGPT is ready. Tap below to launch the updated app.
           </p>
           <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-3 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-sm shadow-lg shadow-sky-500/25 transition-all"
+            onClick={this.handleReload}
+            className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-600 hover:to-cyan-600 text-white font-black text-sm shadow-xl shadow-sky-500/30 transition-all active:scale-95"
           >
-            Reload WeatherGPT
+            Launch WeatherGPT
           </button>
         </div>
       );
