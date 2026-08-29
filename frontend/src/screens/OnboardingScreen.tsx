@@ -13,7 +13,7 @@ import {
   User,
   Sparkles
 } from 'lucide-react';
-import { LANGUAGES, PROFESSIONS, getTranslation } from '../i18n/translations';
+import { LANGUAGES, PROFESSIONS, getTranslation, getProfessionName, getProfessionDesc } from '../i18n/translations';
 import { api, getStoredDeviceId, setStoredToken, setStoredLanguage, setStoredProfession, setOnboardingCompleted } from '../api/client';
 
 interface OnboardingScreenProps {
