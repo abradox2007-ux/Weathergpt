@@ -69,16 +69,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           {/* 4. Today's Climate Section */}
           <TodayClimateCard
             weather={weather}
-            unitTemp={settings.unit_temp}
-            unitWind={settings.unit_wind}
+            unitTemp={settings?.unit_temp || 'celsius'}
+            unitWind={settings?.unit_wind || 'kmh'}
             language={language}
           />
 
           {/* 5. 7-Day Forecast Strip */}
-          {forecast && (
+          {forecast && Array.isArray(forecast.daily) && forecast.daily.length > 0 && (
             <ForecastStrip
               daily={forecast.daily}
-              unitTemp={settings.unit_temp}
+              unitTemp={settings?.unit_temp || 'celsius'}
               language={language}
             />
           )}

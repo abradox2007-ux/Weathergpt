@@ -142,7 +142,7 @@ export const ResearchScreen: React.FC<ResearchScreenProps> = ({
             <div className="h-20 rounded-3xl bg-slate-200 dark:bg-slate-800/80" />
           </div>
         ) : (
-          metrics.map((m) => {
+          (metrics || []).map((m) => {
             const isTooltipOpen = activeTooltip === m.code;
             return (
               <div

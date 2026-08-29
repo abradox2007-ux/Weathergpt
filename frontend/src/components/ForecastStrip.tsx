@@ -10,7 +10,7 @@ interface ForecastStripProps {
 }
 
 export const ForecastStrip: React.FC<ForecastStripProps> = ({
-  daily,
+  daily = [],
   unitTemp = 'celsius',
   language = 'en',
 }) => {
@@ -22,16 +22,20 @@ export const ForecastStrip: React.FC<ForecastStripProps> = ({
   };
 
   const getDayName = (dateStr: string) => {
-    const d = new Date(dateStr);
-    const today = new Date();
-    if (d.toDateString() === today.toDateString()) {
-      return getTranslation(language, 'today');
+    try {
+      const d = new Date(dateStr);
+      const today = new Date();
+      if (d.toDateString() === today.toDateString()) {
+        return getTranslation(language, 'today');
+      }
+      return d.toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'ta' ? 'ta-IN' : 'en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return dateStr || '';
     }
-    return d.toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'ta' ? 'ta-IN' : 'en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric'
-    });
   };
 
   const getWeatherIcon = (code: number) => {
@@ -47,6 +51,10 @@ export const ForecastStrip: React.FC<ForecastStripProps> = ({
     return <Sun className="w-6 h-6 text-amber-500" />;
   };
 
+  if (!daily || !Array.isArray(daily) || daily.length === 0) {
+    return null;
+  }
+
   return (
     <div className="pt-4">
       <div className="px-4 flex items-center justify-between mb-2.5">
@@ -59,7 +67,7 @@ export const ForecastStrip: React.FC<ForecastStripProps> = ({
       </div>
 
       <div className="flex space-x-2.5 overflow-x-auto px-4 pb-2 pt-1 scrollbar-none snap-x">
-        {daily.map((item, idx) => {
+        {(daily || []).map((item, idx) => {
           const isToday = idx === 0;
           return (
             <div

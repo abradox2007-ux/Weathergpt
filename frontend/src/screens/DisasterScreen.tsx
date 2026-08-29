@@ -190,7 +190,7 @@ export const DisasterScreen: React.FC<DisasterScreenProps> = ({
             <span>{getTranslation(language, 'dos')}</span>
           </div>
           <div className="space-y-2">
-            {precautions?.dos.map((item, idx) => (
+            {(precautions?.dos || []).map((item, idx) => (
               <div key={idx} className="flex items-start space-x-2.5 text-xs text-slate-700 dark:text-slate-300 font-medium">
                 <span className="text-emerald-500 font-black shrink-0 mt-0.5">•</span>
                 <span className="leading-snug">{translatePrecaution(item, language)}</span>
@@ -206,7 +206,7 @@ export const DisasterScreen: React.FC<DisasterScreenProps> = ({
             <span>{getTranslation(language, 'donts')}</span>
           </div>
           <div className="space-y-2">
-            {precautions?.donts.map((item, idx) => (
+            {(precautions?.donts || []).map((item, idx) => (
               <div key={idx} className="flex items-start space-x-2.5 text-xs text-slate-700 dark:text-slate-300 font-medium">
                 <span className="text-rose-500 font-black shrink-0 mt-0.5">•</span>
                 <span className="leading-snug">{translatePrecaution(item, language)}</span>
@@ -224,7 +224,7 @@ export const DisasterScreen: React.FC<DisasterScreenProps> = ({
         </div>
 
         <div className="grid grid-cols-2 gap-2.5">
-          {precautions?.emergency_contacts.map((c, idx) => (
+          {(precautions?.emergency_contacts || []).map((c, idx) => (
             <a
               key={idx}
               href={`tel:${c.number}`}
