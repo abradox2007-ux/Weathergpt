@@ -1,5 +1,5 @@
 // WeatherGPT Service Worker for PWA Installation & Offline Shell
-const CACHE_NAME = 'weathergpt-v1';
+const CACHE_NAME = 'weathergpt-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -36,8 +36,12 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   // Network first, fallback to cache
   event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
-    })
+    fetch(event.request)
+      .then((response) => {
+        return response;
+      })
+      .catch(() => {
+        return caches.match(event.request);
+      })
   );
 });
