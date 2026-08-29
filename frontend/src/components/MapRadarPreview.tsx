@@ -17,8 +17,10 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { getTranslation } from '../i18n/translations';
-import L from 'leaflet';
+import * as LModule from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+
+const L: any = (LModule as any)?.default || LModule;
 
 interface MapRadarPreviewProps {
   lat: number;
@@ -44,7 +46,7 @@ const REGIONAL_HUBS = [
 ];
 
 const BASE_MAP_TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-const BASE_MAP_OPTIONS: L.TileLayerOptions = {
+const BASE_MAP_OPTIONS = {
   maxZoom: 19,
   attribution: '&copy; OpenStreetMap contributors'
 };
@@ -116,57 +118,75 @@ export const MapRadarPreview: React.FC<MapRadarPreviewProps> = ({
   }, []);
 
   const createCustomIcon = (cityName: string) => {
-    return L.divIcon({
-      className: 'custom-weather-pin',
-      html: `
-        <div style="position: relative; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -100%);">
-          <div style="position: relative;">
-            <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #06b6d4); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(2,132,199,0.7); border: 2.5px solid #ffffff;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+    if (!L || typeof L.divIcon !== 'function') return undefined;
+    try {
+      return L.divIcon({
+        className: 'custom-weather-pin',
+        html: `
+          <div style="position: relative; display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -100%);">
+            <div style="position: relative;">
+              <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #06b6d4); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(2,132,199,0.7); border: 2.5px solid #ffffff;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              </div>
+              <div style="position: absolute; inset: -3px; border-radius: 50%; border: 2px solid #38bdf8; opacity: 0.8; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
             </div>
-            <div style="position: absolute; inset: -3px; border-radius: 50%; border: 2px solid #38bdf8; opacity: 0.8; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+            <div style="background: rgba(15, 23, 42, 0.95); color: #ffffff; font-weight: 800; font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-top: 2px; border: 1.5px solid #38bdf8; white-space: nowrap; box-shadow: 0 3px 10px rgba(0,0,0,0.35);">
+              📍 ${cityName} (Live)
+            </div>
           </div>
-          <div style="background: rgba(15, 23, 42, 0.95); color: #ffffff; font-weight: 800; font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-top: 2px; border: 1.5px solid #38bdf8; white-space: nowrap; box-shadow: 0 3px 10px rgba(0,0,0,0.35);">
-            📍 ${cityName} (Live)
-          </div>
-        </div>
-      `,
-      iconSize: [32, 48],
-      iconAnchor: [16, 48],
-    });
+        `,
+        iconSize: [32, 48],
+        iconAnchor: [16, 48],
+      });
+    } catch {
+      return undefined;
+    }
   };
 
   const createHubIcon = (name: string, temp: number) => {
-    return L.divIcon({
-      className: 'hub-weather-pill',
-      html: `
-        <div style="background: rgba(255, 255, 255, 0.95); color: #0f172a; font-weight: 700; font-size: 10px; padding: 2px 6px; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: 0 2px 5px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 3px; white-space: nowrap;">
-          <span style="color: #0284c7; font-weight: 800;">${temp}°</span>
-          <span>${name}</span>
-        </div>
-      `,
-      iconSize: [56, 18],
-      iconAnchor: [28, 9],
-    });
+    if (!L || typeof L.divIcon !== 'function') return undefined;
+    try {
+      return L.divIcon({
+        className: 'hub-weather-pill',
+        html: `
+          <div style="background: rgba(255, 255, 255, 0.95); color: #0f172a; font-weight: 700; font-size: 10px; padding: 2px 6px; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: 0 2px 5px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 3px; white-space: nowrap;">
+            <span style="color: #0284c7; font-weight: 800;">${temp}°</span>
+            <span>${name}</span>
+          </div>
+        `,
+        iconSize: [56, 18],
+        iconAnchor: [28, 9],
+      });
+    } catch {
+      return undefined;
+    }
   };
 
-  const renderHubMarkers = (map: L.Map, groupRef: React.MutableRefObject<L.LayerGroup | null>) => {
-    if (groupRef.current) {
-      map.removeLayer(groupRef.current);
-    }
-    const group = L.layerGroup();
-    REGIONAL_HUBS.forEach((hub) => {
-      if (Math.abs(hub.lat - lat) > 0.05 || Math.abs(hub.lon - lon) > 0.05) {
-        L.marker([hub.lat, hub.lon], { icon: createHubIcon(hub.name, hub.temp) }).addTo(group);
+  const renderHubMarkers = (map: any, groupRef: React.MutableRefObject<any>) => {
+    if (!map || !L || typeof L.layerGroup !== 'function') return;
+    try {
+      if (groupRef.current) {
+        map.removeLayer(groupRef.current);
       }
-    });
-    group.addTo(map);
-    groupRef.current = group;
+      const group = L.layerGroup();
+      REGIONAL_HUBS.forEach((hub) => {
+        if (Math.abs(hub.lat - lat) > 0.05 || Math.abs(hub.lon - lon) > 0.05) {
+          const icon = createHubIcon(hub.name, hub.temp);
+          if (icon && typeof L.marker === 'function') {
+            L.marker([hub.lat, hub.lon], { icon }).addTo(group);
+          }
+        }
+      });
+      group.addTo(map);
+      groupRef.current = group;
+    } catch (e) {
+      console.warn('renderHubMarkers notice:', e);
+    }
   };
 
   // 1. Initialize Preview Map
   useEffect(() => {
-    if (!previewContainerRef.current) return;
+    if (!previewContainerRef.current || !L || typeof L.map !== 'function') return;
 
     try {
       if (!previewMapRef.current) {
@@ -182,17 +202,23 @@ export const MapRadarPreview: React.FC<MapRadarPreviewProps> = ({
           attributionControl: false,
         });
 
-        L.tileLayer(BASE_MAP_TILES, BASE_MAP_OPTIONS).addTo(map);
+        if (typeof L.tileLayer === 'function') {
+          L.tileLayer(BASE_MAP_TILES, BASE_MAP_OPTIONS).addTo(map);
+        }
 
-        const marker = L.marker([lat, lon], { icon: createCustomIcon(city) }).addTo(map);
+        const icon = createCustomIcon(city);
+        if (icon && typeof L.marker === 'function') {
+          const marker = L.marker([lat, lon], { icon }).addTo(map);
+          previewMarkerRef.current = marker;
+        }
 
         previewMapRef.current = map;
-        previewMarkerRef.current = marker;
       } else {
         previewMapRef.current.setView([lat, lon], previewMapRef.current.getZoom());
         if (previewMarkerRef.current) {
           previewMarkerRef.current.setLatLng([lat, lon]);
-          previewMarkerRef.current.setIcon(createCustomIcon(city));
+          const icon = createCustomIcon(city);
+          if (icon) previewMarkerRef.current.setIcon(icon);
         }
       }
 
@@ -221,7 +247,7 @@ export const MapRadarPreview: React.FC<MapRadarPreviewProps> = ({
 
   // 2. Initialize Expanded Modal Map
   useEffect(() => {
-    if (!isModalOpen || !modalContainerRef.current) return;
+    if (!isModalOpen || !modalContainerRef.current || !L || typeof L.map !== 'function') return;
 
     let timer: any;
     try {
@@ -237,12 +263,17 @@ export const MapRadarPreview: React.FC<MapRadarPreviewProps> = ({
           attributionControl: false,
         });
 
-        L.tileLayer(BASE_MAP_TILES, BASE_MAP_OPTIONS).addTo(map);
+        if (typeof L.tileLayer === 'function') {
+          L.tileLayer(BASE_MAP_TILES, BASE_MAP_OPTIONS).addTo(map);
+        }
 
-        const marker = L.marker([lat, lon], { icon: createCustomIcon(city) }).addTo(map);
+        const icon = createCustomIcon(city);
+        if (icon && typeof L.marker === 'function') {
+          const marker = L.marker([lat, lon], { icon }).addTo(map);
+          modalMarkerRef.current = marker;
+        }
 
         modalMapRef.current = map;
-        modalMarkerRef.current = marker;
 
         map.on('move', () => {
           if (activeLayer === 'wind') startWindAnimation(modalCanvasRef, modalAnimRef);
@@ -251,7 +282,8 @@ export const MapRadarPreview: React.FC<MapRadarPreviewProps> = ({
         modalMapRef.current.setView([lat, lon], modalMapRef.current.getZoom());
         if (modalMarkerRef.current) {
           modalMarkerRef.current.setLatLng([lat, lon]);
-          modalMarkerRef.current.setIcon(createCustomIcon(city));
+          const icon = createCustomIcon(city);
+          if (icon) modalMarkerRef.current.setIcon(icon);
         }
       }
 

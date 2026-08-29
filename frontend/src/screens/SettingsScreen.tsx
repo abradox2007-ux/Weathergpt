@@ -303,7 +303,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           )}
 
           <div className="space-y-1.5">
-            {locations.map((loc) => (
+            {(locations || []).map((loc) => (
               <div
                 key={loc.id}
                 className="px-3.5 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700 flex items-center justify-between text-xs"
