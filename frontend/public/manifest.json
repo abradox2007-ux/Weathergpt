@@ -1,0 +1,24 @@
+{
+  "name": "WeatherGPT — AI Weather Intelligence",
+  "short_name": "WeatherGPT",
+  "description": "Hyper-local conversational AI weather assistant and multi-layer radar platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0284c7",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
