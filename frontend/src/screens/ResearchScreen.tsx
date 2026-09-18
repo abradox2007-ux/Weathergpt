@@ -43,24 +43,24 @@ export const ResearchScreen: React.FC<ResearchScreenProps> = ({
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
 
   const categories = [
-    { id: 'atmospheric', label: getTranslation(language, 'atmospheric_conditions') || 'Atmospheric Conditions', icon: Cloud },
-    { id: 'moisture', label: getTranslation(language, 'moisture_water') || 'Moisture & Water', icon: Droplets },
-    { id: 'energy', label: getTranslation(language, 'energy_radiation') || 'Energy & Radiation', icon: Sun },
-    { id: 'long_term', label: getTranslation(language, 'long_term_indicators') || 'Long-Term Indicators', icon: Layers },
+    { id: 'atmospheric', label: 'Atmospheric', icon: Cloud },
+    { id: 'moisture', label: 'Moisture & Water', icon: Droplets },
+    { id: 'energy', label: 'Energy & Solar', icon: Sun },
+    { id: 'long_term', label: 'Long-Term', icon: Layers },
   ];
 
   useEffect(() => {
     fetchMetrics(activeCategory);
-  }, [activeCategory, currentLat, currentLon, language]);
+  }, [activeCategory, currentLat, currentLon, currentCity, language]);
 
   useEffect(() => {
     fetchHistorical(selectedRange);
-  }, [selectedRange, currentLat, currentLon]);
+  }, [selectedRange, currentLat, currentLon, currentCity]);
 
   const fetchMetrics = async (cat: string) => {
     setLoading(true);
     try {
-      const res = await api.getResearchMetrics(cat, currentLat, currentLon, language);
+      const res = await api.getResearchMetrics(cat, currentLat, currentLon, language, currentCity);
       setMetrics(res.metrics || []);
     } catch (e) {
       console.error(e);
@@ -81,7 +81,16 @@ export const ResearchScreen: React.FC<ResearchScreenProps> = ({
       const endStr = end.toISOString().split('T')[0];
 
       const res = await api.getHistorical(currentLat, currentLon, startStr, endStr);
-      setHistoricalData(res.data || []);
+      if (res && res.data) {
+        // Sanitize data for Recharts to prevent toFixed crashes
+        const sanitized = (res.data || []).map(p => ({
+          ...p,
+          temp_max: Number(p.temp_max || 0),
+          temp_min: Number(p.temp_min || 0),
+          precipitation: Number(p.precipitation || 0)
+        }));
+        setHistoricalData(sanitized);
+      }
     } catch (e) {
       console.error(e);
     }

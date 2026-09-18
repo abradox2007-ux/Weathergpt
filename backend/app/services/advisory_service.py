@@ -8,15 +8,16 @@ class AdvisoryService:
     def __init__(self):
         self._cache = TTLCache(maxsize=500, ttl=600)  # 10 minute memory cache
 
-    async def get_profession_advisory(self, profession: str, lat: float, lon: float, lang: str = "en") -> Dict[str, Any]:
-        cache_key = f"{profession}_{round(lat, 3)}_{round(lon, 3)}_{lang}"
+    async def get_profession_advisory(self, profession: str, lat: float, lon: float, lang: str = "en", city: Optional[str] = None) -> Dict[str, Any]:
+        cache_key = f"{profession}_{round(lat, 3)}_{round(lon, 3)}_{city or ''}_{lang}"
         if cache_key in self._cache:
             return self._cache[cache_key]
 
         profession = profession.lower().replace(" ", "_")
-        current = await weather_service.get_current_weather(lat, lon)
+        current = await weather_service.get_current_weather(lat, lon, city=city)
         forecast = await weather_service.get_forecast(lat, lon, days=3)
 
+        cityName = city or current.get("city", "your area")
         temp = current.get("temperature", 28.0)
         humidity = current.get("humidity", 60.0)
         wind = current.get("wind_speed", 12.0)
@@ -29,7 +30,7 @@ class AdvisoryService:
         summary = ""
 
         if profession == "farmer":
-            summary = f"Agronomic advisory for {current.get('city', 'your area')}: {cond} conditions with {temp}°C and {humidity}% humidity."
+            summary = f"Agronomic advisory for {cityName}: {cond} conditions with {temp}°C and {humidity}% humidity."
             # Crop Irrigation
             if precip > 5.0 or any(d.get("precip_probability", 0) > 60 for d in forecast.get("daily", [])[:2]):
                 topics.append({

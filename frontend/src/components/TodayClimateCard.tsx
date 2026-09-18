@@ -50,11 +50,13 @@ export const TodayClimateCard: React.FC<TodayClimateCardProps> = ({
     return <Sun className="w-16 h-16 text-amber-200 drop-shadow-md" />;
   };
 
-  const formatTemp = (val: number) => {
+  const formatTemp = (val: any) => {
+    const num = typeof val === 'number' ? val : parseFloat(val);
+    const valid = Number.isFinite(num) ? num : 28;
     if (unitTemp === 'fahrenheit') {
-      return Math.round((val * 9) / 5 + 32);
+      return Math.round((valid * 9) / 5 + 32);
     }
-    return Math.round(val);
+    return Math.round(valid);
   };
 
   const getAqiColor = (aqi: number) => {
@@ -64,15 +66,19 @@ export const TodayClimateCard: React.FC<TodayClimateCardProps> = ({
     return 'bg-rose-500/25 text-rose-100 border-rose-300/40';
   };
 
-  const translatedCondition = getConditionTranslation(weather.condition, language);
+  const translatedCondition = getConditionTranslation(weather.condition || 'Clear Sky', language);
+  const humVal = Number.isFinite(weather.humidity) ? Math.round(weather.humidity) : 60;
+  const windVal = Number.isFinite(weather.wind_speed) ? Math.round(weather.wind_speed) : 12;
+  const uvVal = Number.isFinite(weather.uv_index) ? weather.uv_index.toFixed(1) : '5.0';
+  const aqiVal = Number.isFinite(weather.aqi) ? weather.aqi : 42;
 
   return (
     <div className="px-4 pt-3.5">
       {/* Dynamic Condition Card */}
       <div
         className={`rounded-3xl p-5 sm:p-6 text-white shadow-2xl shadow-sky-500/20 relative overflow-hidden transition-all duration-700 border border-white/20 ${getGradientClass(
-          weather.condition_code,
-          weather.is_day
+          weather.condition_code || 0,
+          weather.is_day ?? 1
         )}`}
       >
         {/* Luminous aura rings */}
@@ -89,10 +95,10 @@ export const TodayClimateCard: React.FC<TodayClimateCardProps> = ({
                 </span>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               </div>
-              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white mt-1 drop-shadow-sm">{weather.city}</h2>
+              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white mt-1 drop-shadow-sm">{weather.city || 'Chennai'}</h2>
             </div>
             <div className="p-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-inner">
-              {getWeatherIcon(weather.condition_code, weather.is_day)}
+              {getWeatherIcon(weather.condition_code || 0, weather.is_day ?? 1)}
             </div>
           </div>
 
@@ -120,7 +126,7 @@ export const TodayClimateCard: React.FC<TodayClimateCardProps> = ({
               </div>
               <div className="min-w-0">
                 <div className="text-[9px] uppercase font-bold text-white/75 truncate">{getTranslation(language, 'humidity')}</div>
-                <div className="text-sm font-black text-white">{Math.round(weather.humidity)}%</div>
+                <div className="text-sm font-black text-white">{humVal}%</div>
               </div>
             </div>
 
@@ -132,31 +138,34 @@ export const TodayClimateCard: React.FC<TodayClimateCardProps> = ({
               <div className="min-w-0">
                 <div className="text-[9px] uppercase font-bold text-white/75 truncate">{getTranslation(language, 'wind')}</div>
                 <div className="text-sm font-black text-white truncate">
-                  {Math.round(weather.wind_speed)} <span className="text-[10px] font-bold text-white/80">{unitWind}</span>
+                  {windVal} <span className="text-[10px] font-bold text-white/80">{unitWind}</span>
                 </div>
               </div>
             </div>
 
             {/* UV Index */}
             <div className="bg-black/15 hover:bg-black/25 transition-colors backdrop-blur-xl rounded-2xl p-2.5 sm:p-3 flex items-center space-x-2.5 border border-white/15 shadow-xs">
-              <div className="p-2 rounded-xl bg-white/15 text-yellow-200">
+              <div className="p-2 rounded-xl bg-white/15 text-yellow-300">
                 <Sun className="w-4 h-4 shrink-0" />
               </div>
               <div className="min-w-0">
-                <div className="text-[9px] uppercase font-bold text-white/75 truncate">{getTranslation(language, 'uv')}</div>
-                <div className="text-sm font-black text-white">{weather.uv_index.toFixed(1)}</div>
+                <div className="text-[9px] uppercase font-bold text-white/75 truncate">{getTranslation(language, 'uv_index')}</div>
+                <div className="text-sm font-black text-white">{uvVal}</div>
               </div>
             </div>
 
             {/* Air Quality (AQI) */}
-            <div className={`backdrop-blur-xl rounded-2xl p-2.5 sm:p-3 flex items-center space-x-2.5 border shadow-xs ${getAqiColor(weather.aqi)}`}>
-              <div className="p-2 rounded-xl bg-white/15 text-emerald-200">
+            <div className="bg-black/15 hover:bg-black/25 transition-colors backdrop-blur-xl rounded-2xl p-2.5 sm:p-3 flex items-center space-x-2.5 border border-white/15 shadow-xs">
+              <div className="p-2 rounded-xl bg-white/15 text-emerald-300">
                 <ShieldCheck className="w-4 h-4 shrink-0" />
               </div>
               <div className="min-w-0">
-                <div className="text-[9px] uppercase font-bold text-white/80 truncate">{getTranslation(language, 'aqi')}</div>
-                <div className="text-xs font-black truncate text-white">
-                  {weather.aqi} • {weather.aqi_label}
+                <div className="text-[9px] uppercase font-bold text-white/75 truncate">{getTranslation(language, 'air_quality')}</div>
+                <div className="flex items-center space-x-1.5 mt-0.5">
+                  <span className="text-xs font-black text-white">{aqiVal}</span>
+                  <span className={`text-[8px] font-bold px-1.5 py-0.2 rounded-full border ${getAqiColor(aqiVal)} truncate max-w-[70px]`}>
+                    {weather.aqi_label || 'Good'}
+                  </span>
                 </div>
               </div>
             </div>

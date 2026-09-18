@@ -12,6 +12,7 @@ async def get_advisory(
     profession: str = Query(default="general", description="User profession/category"),
     lat: float = Query(default=settings.DEFAULT_LAT, description="Latitude"),
     lon: float = Query(default=settings.DEFAULT_LON, description="Longitude"),
+    city: Optional[str] = Query(default=None, description="City name"),
     lang: Optional[str] = Query(default=None, description="Language code"),
     auth: Dict[str, Any] = Depends(require_auth)
 ):
@@ -20,5 +21,6 @@ async def get_advisory(
         profession=profession,
         lat=lat,
         lon=lon,
-        lang=selected_lang
+        lang=selected_lang,
+        city=city
     )

@@ -180,4 +180,6 @@ class GeocodeResultItem(BaseModel):
     lat: float
     lon: float
     country: str
+    country_code: Optional[str] = None
     admin1: Optional[str] = None
+    timezone: Optional[str] = None

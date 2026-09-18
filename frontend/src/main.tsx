@@ -50,7 +50,10 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
           </p>
           {this.state.error && (
             <div className="text-[10px] text-rose-300 bg-rose-950/60 border border-rose-800/80 p-3 rounded-2xl max-w-xs overflow-auto text-left mb-6 font-mono break-words">
-              {this.state.error.message}
+              <div className="font-bold mb-1">{this.state.error.message}</div>
+              <div className="opacity-50 text-[8px] leading-tight">
+                {this.state.error.stack?.split('\n').slice(0, 3).join('\n')}
+              </div>
             </div>
           )}
           <div className="flex flex-col space-y-2.5 w-full max-w-xs">

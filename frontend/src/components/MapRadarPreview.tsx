@@ -99,12 +99,17 @@ export const MapRadarPreview: React.FC<MapRadarPreviewProps> = ({
     };
   }, [isModalOpen]);
 
+  const [radarHost, setRadarHost] = useState<string>('https://tilecache.rainviewer.com');
+
   // Fetch real-time live radar frames
   useEffect(() => {
     const fetchRadarFrames = async () => {
       try {
         const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
         const data = await res.json();
+        if (data?.host) {
+          setRadarHost(data.host);
+        }
         const pastFrames = data?.radar?.past || [];
         if (pastFrames.length > 0) {
           setRadarTimestamps(pastFrames);
@@ -186,7 +191,10 @@ export const MapRadarPreview: React.FC<MapRadarPreviewProps> = ({
 
   // 1. Initialize Preview Map
   useEffect(() => {
-    if (!previewContainerRef.current || !L || typeof L.map !== 'function') return;
+    if (!previewContainerRef.current || !L || typeof L?.map !== 'function') {
+      console.warn('Map initialization skipped: Leaflet (L) or map container not ready.');
+      return;
+    }
 
     try {
       if (!previewMapRef.current) {
@@ -196,7 +204,7 @@ export const MapRadarPreview: React.FC<MapRadarPreviewProps> = ({
         }
 
         const map = L.map(previewContainerRef.current, {
-          center: [lat, lon],
+          center: [lat || 13.0827, lon || 80.2707],
           zoom: 7,
           zoomControl: false,
           attributionControl: false,
@@ -208,15 +216,15 @@ export const MapRadarPreview: React.FC<MapRadarPreviewProps> = ({
 
         const icon = createCustomIcon(city);
         if (icon && typeof L.marker === 'function') {
-          const marker = L.marker([lat, lon], { icon }).addTo(map);
+          const marker = L.marker([lat || 13.0827, lon || 80.2707], { icon }).addTo(map);
           previewMarkerRef.current = marker;
         }
 
         previewMapRef.current = map;
       } else {
-        previewMapRef.current.setView([lat, lon], previewMapRef.current.getZoom());
+        previewMapRef.current.setView([lat || 13.0827, lon || 80.2707], previewMapRef.current.getZoom());
         if (previewMarkerRef.current) {
-          previewMarkerRef.current.setLatLng([lat, lon]);
+          previewMarkerRef.current.setLatLng([lat || 13.0827, lon || 80.2707]);
           const icon = createCustomIcon(city);
           if (icon) previewMarkerRef.current.setIcon(icon);
         }
@@ -240,14 +248,16 @@ export const MapRadarPreview: React.FC<MapRadarPreviewProps> = ({
         try {
           previewMapRef.current.remove();
         } catch {}
-        previewMapRef.current = null;
+          previewMapRef.current = null;
       }
     };
-  }, [lat, lon, city, activeLayer, currentFrameIndex, radarTimestamps]);
+  }, [lat, lon, city, activeLayer, currentFrameIndex, radarTimestamps, radarHost]);
 
   // 2. Initialize Expanded Modal Map
   useEffect(() => {
-    if (!isModalOpen || !modalContainerRef.current || !L || typeof L.map !== 'function') return;
+    if (!isModalOpen || !modalContainerRef.current || !L || typeof L?.map !== 'function') {
+      return;
+    }
 
     let timer: any;
     try {
@@ -257,7 +267,7 @@ export const MapRadarPreview: React.FC<MapRadarPreviewProps> = ({
         }
 
         const map = L.map(modalContainerRef.current, {
-          center: [lat, lon],
+          center: [lat || 13.0827, lon || 80.2707],
           zoom: 7,
           zoomControl: false,
           attributionControl: false,
@@ -269,7 +279,7 @@ export const MapRadarPreview: React.FC<MapRadarPreviewProps> = ({
 
         const icon = createCustomIcon(city);
         if (icon && typeof L.marker === 'function') {
-          const marker = L.marker([lat, lon], { icon }).addTo(map);
+          const marker = L.marker([lat || 13.0827, lon || 80.2707], { icon }).addTo(map);
           modalMarkerRef.current = marker;
         }
 
@@ -279,9 +289,9 @@ export const MapRadarPreview: React.FC<MapRadarPreviewProps> = ({
           if (activeLayer === 'wind') startWindAnimation(modalCanvasRef, modalAnimRef);
         });
       } else {
-        modalMapRef.current.setView([lat, lon], modalMapRef.current.getZoom());
+        modalMapRef.current.setView([lat || 13.0827, lon || 80.2707], modalMapRef.current.getZoom());
         if (modalMarkerRef.current) {
-          modalMarkerRef.current.setLatLng([lat, lon]);
+          modalMarkerRef.current.setLatLng([lat || 13.0827, lon || 80.2707]);
           const icon = createCustomIcon(city);
           if (icon) modalMarkerRef.current.setIcon(icon);
         }
@@ -308,7 +318,7 @@ export const MapRadarPreview: React.FC<MapRadarPreviewProps> = ({
         modalMapRef.current = null;
       }
     };
-  }, [isModalOpen, lat, lon, city, activeLayer, currentFrameIndex, radarTimestamps]);
+  }, [isModalOpen, lat, lon, city, activeLayer, currentFrameIndex, radarTimestamps, radarHost]);
 
   const applyLayerToMap = (
     map: L.Map | null,
@@ -329,23 +339,54 @@ export const MapRadarPreview: React.FC<MapRadarPreviewProps> = ({
     }
 
     const latestFrame = radarTimestamps[currentFrameIndex] || radarTimestamps[radarTimestamps.length - 1];
+    const host = radarHost || 'https://tilecache.rainviewer.com';
 
     if (activeLayer === 'rainfall') {
       if (latestFrame) {
-        const radarTileUrl = `https://tilecache.rainviewer.com${latestFrame.path}/256/{z}/{x}/{y}/2/1_1.png`;
+        const radarTileUrl = `${host}${latestFrame.path}/256/{z}/{x}/{y}/2/1_1.png`;
         const layer = L.tileLayer(radarTileUrl, {
           opacity: 0.85,
           maxZoom: 18,
-        }).addTo(map);
+          maxNativeZoom: 10,
+          tileSize: 256,
+          keepBuffer: 6,
+        });
+
+        layer.on('tileerror', (error: any) => {
+          const tile = error.tile;
+          if (tile && !tile._hasRetried) {
+            tile._hasRetried = true;
+            setTimeout(() => {
+              tile.src = error.url;
+            }, 400);
+          }
+        });
+
+        layer.addTo(map);
         overlayRef.current = layer;
       }
     } else if (activeLayer === 'infrared') {
       if (latestFrame) {
-        const irTileUrl = `https://tilecache.rainviewer.com${latestFrame.path}/256/{z}/{x}/{y}/4/1_1.png`;
+        const irTileUrl = `${host}${latestFrame.path}/256/{z}/{x}/{y}/4/1_1.png`;
         const layer = L.tileLayer(irTileUrl, {
           opacity: 0.9,
           maxZoom: 18,
-        }).addTo(map);
+          maxNativeZoom: 10,
+          tileSize: 256,
+          keepBuffer: 6,
+        });
+
+        layer.on('tileerror', (error: any) => {
+          const tile = error.tile;
+          if (tile && !tile._hasRetried) {
+            tile._hasRetried = true;
+            setTimeout(() => {
+              tile.src = error.url;
+            }, 400);
+          }
+        });
+
+        layer.addTo(map);
         overlayRef.current = layer;
       }
     } else if (activeLayer === 'thermal') {

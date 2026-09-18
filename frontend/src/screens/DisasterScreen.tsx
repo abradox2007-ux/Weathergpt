@@ -38,17 +38,22 @@ export const DisasterScreen: React.FC<DisasterScreenProps> = ({
 
   useEffect(() => {
     fetchAlerts();
-  }, [currentLat, currentLon, language]);
+  }, [currentLat, currentLon, currentCity, language]);
 
   const fetchAlerts = async () => {
     setLoading(true);
     try {
-      const res = await api.getActiveAlerts(currentLat, currentLon, language);
-      setAlerts(res.alerts || []);
-      if (res.alerts && res.alerts.length > 0) {
-        setSelectedAlert(res.alerts[0]);
-        loadPrecautions(res.alerts[0]);
+      const res = await api.getActiveAlerts(currentLat, currentLon, language, currentCity);
+      if (res && res.alerts) {
+        setAlerts(res.alerts || []);
+        if (res.alerts.length > 0) {
+          setSelectedAlert(res.alerts[0]);
+          loadPrecautions(res.alerts[0]);
+        } else {
+          loadGeneralPrecautions();
+        }
       } else {
+        setAlerts([]);
         loadGeneralPrecautions();
       }
     } catch (e) {

@@ -211,7 +211,7 @@ class LLMService:
         lang_directive = "Tamil (தமிழ்)" if detected_lang == "ta" else "Hindi (हिंदी)" if detected_lang == "hi" else "Telugu (తెలుగు)" if detected_lang == "te" else "English"
 
         system_prompt = (
-            f"You are WeatherGPT, an advanced AI Weather Assistant for India.\n"
+            f"You are WeatherGPT, an advanced AI Weather & Climate Intelligence Assistant worldwide.\n"
             f"User Location: {active_city} (Lat: {lat}, Lon: {lon}). User Role: {profession.upper()}.\n\n"
             f"CRITICAL LANGUAGE RULE:\n"
             f"- The user's input language is detected as: {lang_directive}.\n"

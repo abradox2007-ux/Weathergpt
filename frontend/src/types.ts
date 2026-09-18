@@ -20,6 +20,25 @@ export interface LocationItem {
   is_default?: boolean;
 }
 
+export interface GeocodeResultItem {
+  name: string;
+  lat: number;
+  lon: number;
+  country: string;
+  country_code?: string;
+  admin1?: string;
+  timezone?: string;
+}
+
+export interface GlobalLocation {
+  city: string;
+  lat: number;
+  lon: number;
+  country?: string;
+  country_code?: string;
+  admin1?: string;
+}
+
 export interface CurrentWeather {
   lat: number;
   lon: number;

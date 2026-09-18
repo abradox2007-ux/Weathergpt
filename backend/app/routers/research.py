@@ -13,9 +13,10 @@ async def get_research_metrics(
     category: str = Query(default="atmospheric", description="Category: atmospheric | moisture | energy | long_term"),
     lat: float = Query(default=settings.DEFAULT_LAT, description="Latitude"),
     lon: float = Query(default=settings.DEFAULT_LON, description="Longitude"),
+    city: Optional[str] = Query(default=None, description="City name"),
     auth: Dict[str, Any] = Depends(require_auth)
 ):
-    current = await weather_service.get_current_weather(lat, lon)
+    current = await weather_service.get_current_weather(lat, lon, city=city)
     category = category.lower().replace(" ", "_")
 
     temp = current.get("temperature", 28.0)

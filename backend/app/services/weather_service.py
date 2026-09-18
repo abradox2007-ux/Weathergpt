@@ -402,14 +402,14 @@ class WeatherService:
         query = query.strip()
         if not query:
             return []
-        if query in self._geo_cache:
-            return self._geo_cache[query]
+        if query.lower() in self._geo_cache:
+            return self._geo_cache[query.lower()]
 
         try:
             client = self._get_client()
             res = await client.get(
                 f"{settings.OPEN_METEO_GEO_URL}/search",
-                params={"name": query, "count": 6, "language": "en", "format": "json"}
+                params={"name": query, "count": 10, "language": "en", "format": "json"}
             )
             if res.status_code == 200:
                 results = res.json().get("results", [])
@@ -418,25 +418,37 @@ class WeatherService:
                         "name": r.get("name"),
                         "lat": r.get("latitude"),
                         "lon": r.get("longitude"),
-                        "country": r.get("country", "India"),
-                        "admin1": r.get("admin1", "")
+                        "country": r.get("country", ""),
+                        "country_code": r.get("country_code", ""),
+                        "admin1": r.get("admin1", ""),
+                        "timezone": r.get("timezone", "")
                     }
                     for r in results
                 ]
-                self._geo_cache[query] = formatted
-                return formatted
+                if formatted:
+                    self._geo_cache[query.lower()] = formatted
+                    return formatted
         except Exception as e:
             logger.error("Geocoding lookup error: %s", e)
 
-        indian_cities = [
-            {"name": "New Delhi", "lat": 28.6139, "lon": 77.2090, "country": "India", "admin1": "Delhi"},
-            {"name": "Mumbai", "lat": 19.0760, "lon": 72.8777, "country": "India", "admin1": "Maharashtra"},
-            {"name": "Chennai", "lat": 13.0827, "lon": 80.2707, "country": "India", "admin1": "Tamil Nadu"},
-            {"name": "Kolkata", "lat": 22.5726, "lon": 88.3639, "country": "India", "admin1": "West Bengal"},
-            {"name": "Bengaluru", "lat": 12.9716, "lon": 77.5946, "country": "India", "admin1": "Karnataka"},
-            {"name": "Hyderabad", "lat": 17.3850, "lon": 78.4867, "country": "India", "admin1": "Telangana"}
+        global_cities = [
+            {"name": "London", "lat": 51.5074, "lon": -0.1278, "country": "United Kingdom", "country_code": "GB", "admin1": "England", "timezone": "Europe/London"},
+            {"name": "Tokyo", "lat": 35.6762, "lon": 139.6503, "country": "Japan", "country_code": "JP", "admin1": "Tokyo", "timezone": "Asia/Tokyo"},
+            {"name": "New York", "lat": 40.7128, "lon": -74.0060, "country": "United States", "country_code": "US", "admin1": "New York", "timezone": "America/New_York"},
+            {"name": "Paris", "lat": 48.8566, "lon": 2.3522, "country": "France", "country_code": "FR", "admin1": "Île-de-France", "timezone": "Europe/Paris"},
+            {"name": "Dubai", "lat": 25.2048, "lon": 55.2708, "country": "United Arab Emirates", "country_code": "AE", "admin1": "Dubai", "timezone": "Asia/Dubai"},
+            {"name": "Singapore", "lat": 1.3521, "lon": 103.8198, "country": "Singapore", "country_code": "SG", "admin1": "Singapore", "timezone": "Asia/Singapore"},
+            {"name": "Sydney", "lat": -33.8688, "lon": 151.2093, "country": "Australia", "country_code": "AU", "admin1": "New South Wales", "timezone": "Australia/Sydney"},
+            {"name": "New Delhi", "lat": 28.6139, "lon": 77.2090, "country": "India", "country_code": "IN", "admin1": "Delhi", "timezone": "Asia/Kolkata"},
+            {"name": "Mumbai", "lat": 19.0760, "lon": 72.8777, "country": "India", "country_code": "IN", "admin1": "Maharashtra", "timezone": "Asia/Kolkata"},
+            {"name": "Toronto", "lat": 43.6532, "lon": -79.3832, "country": "Canada", "country_code": "CA", "admin1": "Ontario", "timezone": "America/Toronto"},
+            {"name": "Berlin", "lat": 52.5200, "lon": 13.4050, "country": "Germany", "country_code": "DE", "admin1": "Berlin", "timezone": "Europe/Berlin"},
+            {"name": "Rome", "lat": 41.9028, "lon": 12.4964, "country": "Italy", "country_code": "IT", "admin1": "Lazio", "timezone": "Europe/Rome"},
         ]
-        matched = [c for c in indian_cities if query.lower() in c["name"].lower() or query.lower() in c["admin1"].lower()]
-        return matched or indian_cities[:3]
+        matched = [
+            c for c in global_cities 
+            if query.lower() in c["name"].lower() or query.lower() in c["country"].lower() or (c.get("admin1") and query.lower() in c["admin1"].lower())
+        ]
+        return matched or global_cities[:4]
 
 weather_service = WeatherService()

@@ -44,10 +44,112 @@ By integrating **Numerical Weather Prediction (NWP) models**, **Pluggable Large 
 
 ### 3. AI & Natural Language Processing (LLM Engine)
 WeatherGPT features a **pluggable, provider-agnostic AI layer** selectable dynamically via configuration (`LLM_PROVIDER`):
-* **Google Gemini (1.5 / 2.0 Flash)**: High-speed reasoning with extensive context window.
-* **Groq (LLaMA 3.3 70B / 8B)**: Sub-second inference latency for real-time voice conversations.
-* **OpenAI (GPT-4o / GPT-4o-mini)**: Comprehensive natural language understanding.
+* **Google Gemini (1.5 / 2.0 / Flash)**: High-speed reasoning with extensive context window and Indian multilingual understanding.
+* **Groq (LLaMA 3.3 70B / 8B)**: Sub-second inference latency for real-time conversational voice interactions.
+* **OpenAI (GPT-4o / GPT-4o-mini)**: Comprehensive natural language understanding and zero-shot reasoning.
 * **Deterministic Rule-Based Engine**: Safe, offline fallback that formulates structured advice without an active external LLM API key.
+
+---
+
+## 🤖 AI Models Architecture & Processing Flowchart
+
+This section details **how and where AI models are used** across WeatherGPT—from speech recognition in regional Indian languages, to anti-hallucination meteorological data grounding, multi-provider LLM inference, and multimodal voice readback.
+
+### 📊 End-to-End AI Flowchart
+
+```mermaid
+flowchart TD
+    subgraph UI["1. User Interaction Layer (Frontend)"]
+        A1["🎤 Voice Input (13 Indian Languages)"] -->|Audio Stream| A2["Web Speech STT API<br/>(In-Browser Speech-to-Text)"]
+        A3["⌨️ Text Input / Suggested Chips"]
+        A2 --> B1["Natural Language Query Text"]
+        A3 --> B1
+    end
+
+    subgraph PreProcessing["2. NLP Pre-Processing & Routing (FastAPI Backend)"]
+        B1 --> C1["Language & Script Detector<br/>(Devanagari, Tamil, Telugu, Bengali, Tanglish, Hinglish)"]
+        C1 --> C2["Rule-Based Intent Classifier"]
+        C2 -->|Intent Mapping| C3{"Query Intent"}
+        C3 -->|forecast / rain / umbrella| D1["Forecast Query"]
+        C3 -->|yesterday / past weather| D2["Historical Research"]
+        C3 -->|farmer / fishing / aviation / marine| D3["Profession Advisory"]
+        C3 -->|cyclone / flood / heatwave / storm| D4["Severe Alert Lookup"]
+        C3 -->|temperature / humidity / general| D5["Current / General Chat"]
+    end
+
+    subgraph DataGrounding["3. Anti-Hallucination Data Grounding (RAG Pipeline)"]
+        D1 & D5 --> E1["Open-Meteo NWP Forecast API<br/>(ECMWF / GFS 7-Day & Hourly)"]
+        D2 --> E2["Open-Meteo Historical Archive API<br/>(Decadal Climate Reanalysis)"]
+        D3 --> E3["Sector Agronomic & Marine Decision Engines<br/>(ET₀, Soil Moisture, Swell, VFR, Spray Window)"]
+        D4 --> E4["IMD / NDMA Alert Evaluation Engine<br/>(Hazard Thresholds: Cyclone, Inundation, Loo)"]
+        E1 & E2 & E3 & E4 --> F1["Structured JSON Grounding Context<br/>(Verified Live Meteorological Parameters)"]
+    end
+
+    subgraph PromptEngine["4. Grounded Prompt Synthesis"]
+        F1 --> G1["System Prompt Assembly<br/>- Strict Native Language Directive<br/>- Zero-Hallucination Anti-Fabrication Rules<br/>- Injected Real-Time Meteorological JSON"]
+    end
+
+    subgraph LLMLayer["5. Pluggable Multi-Provider AI Inference Layer"]
+        G1 --> H1{"Configured LLM Provider<br/>(LLM_PROVIDER setting)"}
+        
+        H1 -->|groq| P1["⚡ Groq Adapter<br/>(LLaMA 3.3 70B / 8B)<br/>Ultra-Low Latency Inference (<500ms)"]
+        H1 -->|gemini| P2["🧠 Google Gemini Adapter<br/>(Gemini Flash Models)<br/>High Context Reasoning in Indic Languages"]
+        H1 -->|openai| P3["🤖 OpenAI Adapter<br/>(GPT-4o / GPT-4o-mini)<br/>Deep Conversational Nuance"]
+        
+        P1 -->|Timeout / Rate Limit / No Key| H2{"Failover Fallback"}
+        P2 -->|Timeout / Rate Limit / No Key| H2
+        P3 -->|Timeout / Rate Limit / No Key| H2
+        
+        H2 -->|Try Alternative Provider| P1
+        H2 -->|Try Alternative Provider| P2
+        H2 -->|Try Alternative Provider| P3
+        
+        H2 -->|All APIs Offline / Offline Mode| P4["🛡️ Deterministic Rule-Based Engine<br/>(Safe Offline Fallback with Verified Data)"]
+    end
+
+    subgraph OutputLayer["6. Response Synthesis & Multimodal Delivery"]
+        P1 & P2 & P3 & P4 --> J1["Formatted Multilingual AI Response<br/>+ Contextual Follow-Up Suggestions"]
+        J1 --> K1["💬 Chat UI Stream Display"]
+        J1 --> K2["🔊 Web Speech TTS Engine<br/>(Regional Accent Voice Readout)"]
+        J1 --> K3["💾 MongoDB / In-Memory Chat History Log"]
+    end
+
+    classDef primary fill:#2563eb,stroke:#1d4ed8,stroke-width:2px,color:#fff;
+    classDef ai fill:#7c3aed,stroke:#6d28d9,stroke-width:2px,color:#fff;
+    classDef fallback fill:#ea580c,stroke:#c2410c,stroke-width:2px,color:#fff;
+    classDef data fill:#059669,stroke:#047857,stroke-width:2px,color:#fff;
+
+    class P1,P2,P3 ai;
+    class P4 fallback;
+    class E1,E2,E3,E4 data;
+```
+
+---
+
+### 🔍 Where & How AI Models Are Used: Detailed Breakdown
+
+| AI / ML Component | Project Location | Model / Technology Used | How & Why It Is Used |
+|---|---|---|---|
+| **1. Voice Recognition (STT)** | Frontend (`VoiceChatBar.tsx`) | **Web Speech API (`webkitSpeechRecognition`)** | Converts spoken user queries in any of 13 Indian languages into text strings directly in the client browser with zero latency. |
+| **2. Language & Transliteration Detection** | Backend (`llm_service.py`) | **Unicode Range & Lexical Regex Matcher** | Identifies native Indian scripts (Devanagari, Tamil, Telugu, Bengali) as well as romanized transliterations (*Tanglish*, *Hinglish*). Dictates the language for the final response. |
+| **3. Intent Classification Engine** | Backend (`llm_service.py`) | **Deterministic Token Classifier** | Classifies incoming queries into 6 operational intents: `forecast_query`, `historical_research`, `profession_advisory`, `alert_lookup`, `current_weather`, and `general_weather_chat`. |
+| **4. RAG Data Grounding (Anti-Hallucination)** | Backend (`llm_service.py`, `weather_service.py`) | **Dynamic Context Enrichment Engine** | Fetches live Numerical Weather Prediction (NWP) parameters (soil moisture, ET₀, wind gusts, UV index, past rain) and injects them as verified JSON into the prompt before inference. |
+| **5. Ultra-Fast Conversational LLM** | Backend (`GroqAdapter` in `llm_service.py`) | **Groq LLaMA 3.3 70B / 8B (or `openai/gpt-oss-20b`)** | Provides sub-second inference latency (~300-500ms), making real-time voice conversations feel immediate and natural. |
+| **6. High-Reasoning Multilingual LLM** | Backend (`GeminiAdapter` in `llm_service.py`) | **Google Gemini (1.5 / 2.0 / Flash)** | Delivers high context reasoning and nuanced native-script language generation across Indian regional languages. |
+| **7. Conversational Reasoning LLM** | Backend (`OpenAIAdapter` in `llm_service.py`) | **OpenAI GPT-4o / GPT-4o-mini** | Serves as a primary or secondary cloud provider for semantic parsing and structured advice formulation. |
+| **8. Offline Resilient Rule Engine** | Backend (`_build_grounded_fallback_response`) | **Deterministic Grounded Fallback Engine** | Ensures 100% platform availability: generates grammatically correct, verified weather responses even when all external LLM APIs are offline or unconfigured. |
+| **9. Agronomic & Maritime Decision Engines** | Backend (`advisory_service.py`, `alerts_service.py`) | **Threshold-Based Expert Systems** | Evaluates agricultural spraying windows, irrigation requirements, sea swell safety, and IMD/NDMA disaster warning levels (🟡 Advisory, 🟠 Watch, 🔴 Warning). |
+| **10. Voice Readout (TTS)** | Frontend (`VoiceChatBar.tsx`) | **Web Speech Synthesis API (`speechSynthesis`)** | Reads out the generated AI response aloud using native voice synthesis matched to the user's selected regional language. |
+
+---
+
+### 🛡️ Anti-Hallucination Guarantee
+
+To prevent LLMs from inventing inaccurate temperatures, fake cyclone warnings, or faulty farming advice, WeatherGPT enforces a **strict Retrieval-Augmented Grounding (RAG) pattern**:
+1. **Live Fetch Before Generation**: No LLM prompt is executed without first fetching real-time NWP metrics from Open-Meteo.
+2. **Context-Bound Instructions**: The system prompt explicitly commands the model:
+   > *"Answer the user's specific question directly based STRICTLY on the live verified data provided. Do not extrapolate or guess values not present in the context."*
+3. **Consistent Validation**: If an LLM response fails or times out, the deterministic fallback engine synthesizes responses exclusively from the exact recorded values.
 
 ---
 

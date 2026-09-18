@@ -8,6 +8,7 @@ import { SettingsScreen } from './screens/SettingsScreen';
 import { BottomNav, TabType } from './components/BottomNav';
 import {
   api,
+  getApiBaseUrl,
   isOnboardingCompleted,
   getStoredLanguage,
   getStoredProfession,
@@ -32,6 +33,7 @@ export const App: React.FC = () => {
   const [weather, setWeather] = useState<CurrentWeather | null>(null);
   const [forecast, setForecast] = useState<ForecastResponse | null>(null);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [isBackendHealthy, setIsBackendHealthy] = useState<boolean | null>(null);
   const [settings, setSettings] = useState<UserSettings>({
     unit_temp: 'celsius',
     unit_wind: 'kmh',
@@ -76,8 +78,8 @@ export const App: React.FC = () => {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
-          const userLat = pos.coords.latitude;
-          const userLon = pos.coords.longitude;
+          const userLat = pos.coords.latitude || 13.0827;
+          const userLon = pos.coords.longitude || 80.2707;
           setLat(userLat);
           setLon(userLon);
           localStorage.setItem('weathergpt_lat', String(userLat));
@@ -120,6 +122,9 @@ export const App: React.FC = () => {
   };
 
   useEffect(() => {
+    // Immediately load current/default location weather without waiting for GPS
+    loadAllWeatherData(lat, lon, city);
+    loadUserSettings();
     detectLiveLocation();
   }, []);
 
@@ -174,18 +179,24 @@ export const App: React.FC = () => {
         api.getActiveAlerts(latitude, longitude),
       ]);
 
-      if (currentRes.status === 'fulfilled') {
-        // Ensure the card displays the detected city name
+      if (currentRes.status === 'fulfilled' && currentRes.value) {
         setWeather({ ...currentRes.value, city: cityName });
+        setIsBackendHealthy(true);
       }
-      if (forecastRes.status === 'fulfilled') {
+      if (forecastRes.status === 'fulfilled' && forecastRes.value) {
         setForecast(forecastRes.value);
       }
-      if (alertsRes.status === 'fulfilled') {
+      if (alertsRes.status === 'fulfilled' && alertsRes.value) {
         setAlerts(alertsRes.value.alerts || []);
+      }
+
+      if (currentRes.status === 'rejected') {
+        console.error('Backend connection failed:', currentRes.reason);
+        setIsBackendHealthy(false);
       }
     } catch (e) {
       console.error('Error fetching weather data:', e);
+      setIsBackendHealthy(false);
     }
   };
 
@@ -194,23 +205,29 @@ export const App: React.FC = () => {
       const s = await api.getSettings();
       if (s) {
         setSettings((prev) => ({ ...prev, ...s }));
+        setIsBackendHealthy(true);
         if (s.theme) {
           localStorage.setItem('weathergpt_theme', s.theme);
         }
       }
     } catch (e) {
       console.error('Error loading settings:', e);
+      // Don't set unhealthy here yet, weather is more critical
     }
   };
 
-  const handleSelectCity = (newCity: string, newLat: number, newLon: number) => {
-    setCity(newCity);
+  const handleSelectCity = (newCity: string, newLat: number, newLon: number, newCountry?: string) => {
+    const fullCityName = newCountry && !newCity.toLowerCase().includes(newCountry.toLowerCase())
+      ? `${newCity}, ${newCountry}`
+      : newCity;
+
+    setCity(fullCityName);
     setLat(newLat);
     setLon(newLon);
-    localStorage.setItem('weathergpt_city', newCity);
+    localStorage.setItem('weathergpt_city', fullCityName);
     localStorage.setItem('weathergpt_lat', String(newLat));
     localStorage.setItem('weathergpt_lon', String(newLon));
-    loadAllWeatherData(newLat, newLon, newCity);
+    loadAllWeatherData(newLat, newLon, fullCityName);
   };
 
   const handleUpdateLanguage = (newLang: string) => {
@@ -251,6 +268,60 @@ export const App: React.FC = () => {
 
   const hasSevereAlerts = alerts.some((a) => a.severity === 'warning' || a.severity === 'watch');
 
+  if (isBackendHealthy === false) {
+    return (
+      <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-rose-500 flex items-center justify-center mb-4 shadow-xl">
+          <span className="text-3xl">📡</span>
+        </div>
+        <h1 className="text-xl font-black mb-2">Backend Connection Failed</h1>
+        <p className="text-xs text-slate-400 mb-6 max-w-xs leading-relaxed">
+          The app cannot reach the weather server at <code className="text-sky-400">{getApiBaseUrl()}</code>.
+        </p>
+
+        <div className="w-full max-w-xs mb-6 space-y-2">
+          <p className="text-[10px] text-slate-500 uppercase font-black text-left pl-1">Server URL</p>
+          <input
+            type="text"
+            defaultValue={localStorage.getItem('weathergpt_server_url') || 'http://127.0.0.1:8000'}
+            placeholder="http://127.0.0.1:8000 or http://192.168.x.x:8000"
+            className="w-full bg-slate-800 border border-slate-700 px-4 py-3 rounded-2xl text-sm focus:outline-none focus:border-sky-500 font-mono"
+            onBlur={(e) => {
+              const val = e.target.value.trim();
+              if (val) {
+                localStorage.setItem('weathergpt_server_url', val);
+                window.location.reload();
+              }
+            }}
+          />
+          <p className="text-[9px] text-slate-500 italic">Running on your computer? Use http://127.0.0.1:8000</p>
+        </div>
+
+        <div className="flex flex-col space-y-2.5 w-full max-w-xs">
+          <button
+            onClick={() => {
+              localStorage.removeItem('weathergpt_server_url');
+              setIsBackendHealthy(null);
+              loadAllWeatherData(lat, lon, city);
+            }}
+            className="w-full py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-sky-400 border border-sky-500/30 font-bold text-xs shadow-md transition-all active:scale-95"
+          >
+            Reset to Localhost (127.0.0.1:8000)
+          </button>
+          <button
+            onClick={() => {
+              setIsBackendHealthy(null);
+              loadAllWeatherData(lat, lon, city);
+            }}
+            className="w-full py-3.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-black text-sm shadow-xl transition-all active:scale-95"
+          >
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50/70 via-slate-50 to-indigo-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-300 selection:bg-sky-500 selection:text-white relative overflow-x-hidden">
       {/* Ambient background glows for rich aesthetic */}
@@ -273,6 +344,7 @@ export const App: React.FC = () => {
             onSelectCity={handleSelectCity}
             onTriggerGPS={detectLiveLocation}
             onNavigateToDisaster={() => setActiveTab('disaster')}
+            onNavigateToProfession={() => setActiveTab('profession')}
           />
         )}
 

@@ -12,9 +12,10 @@ router = APIRouter(prefix="/api/alerts", tags=["Disaster Alerts"])
 async def get_active_alerts(
     lat: float = Query(default=settings.DEFAULT_LAT, description="Latitude"),
     lon: float = Query(default=settings.DEFAULT_LON, description="Longitude"),
+    city: Optional[str] = Query(default=None, description="City name"),
     auth: Dict[str, Any] = Depends(require_auth)
 ):
-    alerts = await alerts_service.evaluate_active_alerts(lat, lon)
+    alerts = await alerts_service.evaluate_active_alerts(lat, lon, city=city)
     formatted = []
     for a in alerts:
         formatted.append(AlertResponseItem(

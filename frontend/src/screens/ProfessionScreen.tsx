@@ -39,12 +39,12 @@ export const ProfessionScreen: React.FC<ProfessionScreenProps> = ({
 
   useEffect(() => {
     fetchAdvisory();
-  }, [currentProfession, currentLat, currentLon, language]);
+  }, [currentProfession, currentLat, currentLon, currentCity, language]);
 
   const fetchAdvisory = async () => {
     setLoading(true);
     try {
-      const data = await api.getAdvisory(currentProfession, currentLat, currentLon, language);
+      const data = await api.getAdvisory(currentProfession, currentLat, currentLon, language, currentCity);
       setAdvisory(data);
     } catch (e) {
       console.error(e);
@@ -83,9 +83,14 @@ export const ProfessionScreen: React.FC<ProfessionScreenProps> = ({
       {/* Screen Header */}
       <div className="flex items-center justify-between pt-1 pb-3">
         <div>
-          <span className="text-[10px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-wider">
-            {getTranslation(language, 'operational_guidance')}
-          </span>
+          <div className="flex items-center space-x-1.5">
+            <span className="text-[10px] font-black text-sky-600 dark:text-sky-400 uppercase tracking-wider">
+              {getTranslation(language, 'operational_guidance')}
+            </span>
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-sky-50 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-sky-200/50 dark:border-slate-700">
+              📍 {currentCity}
+            </span>
+          </div>
           <h1 className="text-xl font-black text-slate-900 dark:text-white">
             {getTranslation(language, 'profession_advisory')}
           </h1>
@@ -172,7 +177,7 @@ export const ProfessionScreen: React.FC<ProfessionScreenProps> = ({
             <div className="h-32 rounded-3xl bg-slate-200 dark:bg-slate-800/80" />
             <div className="h-32 rounded-3xl bg-slate-200 dark:bg-slate-800/80" />
           </div>
-        ) : advisory?.topics && advisory.topics.length > 0 ? (
+        ) : advisory?.topics && Array.isArray(advisory.topics) && advisory.topics.length > 0 ? (
           advisory.topics.map((topic, idx) => {
             const translatedCategory = translateAdvisoryText(topic.category, language);
             const translatedTitle = translateAdvisoryText(topic.title, language);
