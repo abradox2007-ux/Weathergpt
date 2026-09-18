@@ -23,27 +23,30 @@ class GroqAdapter(BaseLLMAdapter):
     async def generate_response(self, prompt: str, system_prompt: str) -> Optional[str]:
         if not self.api_key:
             return None
-        try:
-            url = "https://api.groq.com/openai/v1/chat/completions"
-            headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
-            payload = {
-                "model": "openai/gpt-oss-20b",
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt}
-                ],
-                "temperature": 0.2,
-                "max_tokens": 500
-            }
-            async with httpx.AsyncClient(timeout=8.0) as client:
-                res = await client.post(url, headers=headers, json=payload)
-                if res.status_code == 200:
-                    data = res.json()
-                    return data["choices"][0]["message"]["content"]
-                else:
-                    logger.warning("Groq status %s: %s", res.status_code, res.text)
-        except Exception as e:
-            logger.error("Groq API call failed: %s", e)
+        # Try active models in order: llama-3.3-70b-versatile, llama-3.1-8b-instant
+        models_to_try = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"]
+        for model_name in models_to_try:
+            try:
+                url = "https://api.groq.com/openai/v1/chat/completions"
+                headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
+                payload = {
+                    "model": model_name,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0.2,
+                    "max_tokens": 500
+                }
+                async with httpx.AsyncClient(timeout=8.0) as client:
+                    res = await client.post(url, headers=headers, json=payload)
+                    if res.status_code == 200:
+                        data = res.json()
+                        return data["choices"][0]["message"]["content"]
+                    else:
+                        logger.warning("Groq (%s) status %s: %s", model_name, res.status_code, res.text)
+            except Exception as e:
+                logger.error("Groq API call failed for %s: %s", model_name, e)
         return None
 
 class GeminiAdapter(BaseLLMAdapter):
@@ -53,27 +56,29 @@ class GeminiAdapter(BaseLLMAdapter):
     async def generate_response(self, prompt: str, system_prompt: str) -> Optional[str]:
         if not self.api_key:
             return None
-        try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={self.api_key}"
-            payload = {
-                "contents": [
-                    {"role": "user", "parts": [{"text": f"{system_prompt}\n\nUser Question:\n{prompt}"}]}
-                ],
-                "generationConfig": {"temperature": 0.2, "maxOutputTokens": 600}
-            }
-            async with httpx.AsyncClient(timeout=8.0) as client:
-                res = await client.post(url, json=payload)
-                if res.status_code == 200:
-                    data = res.json()
-                    candidates = data.get("candidates", [])
-                    if candidates and "content" in candidates[0]:
-                        parts = candidates[0]["content"].get("parts", [])
-                        if parts:
-                            return parts[0].get("text")
-                else:
-                    logger.warning("Gemini status %s: %s", res.status_code, res.text)
-        except Exception as e:
-            logger.error("Gemini API call failed: %s", e)
+        # Try gemini-1.5-flash and gemini-2.0-flash
+        for model_name in ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]:
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={self.api_key}"
+                payload = {
+                    "contents": [
+                        {"role": "user", "parts": [{"text": f"{system_prompt}\n\nUser Question:\n{prompt}"}]}
+                    ],
+                    "generationConfig": {"temperature": 0.2, "maxOutputTokens": 600}
+                }
+                async with httpx.AsyncClient(timeout=8.0) as client:
+                    res = await client.post(url, json=payload)
+                    if res.status_code == 200:
+                        data = res.json()
+                        candidates = data.get("candidates", [])
+                        if candidates and "content" in candidates[0]:
+                            parts = candidates[0]["content"].get("parts", [])
+                            if parts:
+                                return parts[0].get("text")
+                    else:
+                        logger.warning("Gemini (%s) status %s: %s", model_name, res.status_code, res.text)
+            except Exception as e:
+                logger.error("Gemini API call failed for %s: %s", model_name, e)
         return None
 
 class OpenAIAdapter(BaseLLMAdapter):

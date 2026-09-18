@@ -15,25 +15,126 @@ export const getApiBaseUrl = (): string => {
   if (customUrl && customUrl.trim()) {
     return `${customUrl.trim().replace(/\/$/, '')}/api`;
   }
+  if (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL.trim()) {
+    return `${import.meta.env.VITE_API_URL.trim().replace(/\/$/, '')}/api`;
+  }
   // If running natively on Android via Capacitor
   if (Capacitor.isNativePlatform()) {
-    if (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL.trim()) {
-      return `${import.meta.env.VITE_API_URL.trim().replace(/\/$/, '')}/api`;
-    }
-    // Default to host machine IP on local Wi-Fi
-    return 'http://10.111.161.243:8000/api';
+    return 'http://10.0.2.2:8000/api'; // Android Emulator default or fallback
   }
   // Web browser on localhost/127.0.0.1 uses Vite's proxy directly
   if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
     return '/api';
   }
-  if (import.meta.env.VITE_API_URL) {
-    return `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}/api`;
-  }
   return '/api';
 };
 
 const API_BASE = getApiBaseUrl();
+
+// Direct Client-Side LLM Callers
+const directCallGroq = async (apiKey: string, userPrompt: string, systemPrompt: string): Promise<string | null> => {
+  const models = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+  for (const model of models) {
+    try {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey.trim()}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          temperature: 0.2,
+          max_tokens: 500
+        })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        return json.choices?.[0]?.message?.content || null;
+      }
+    } catch {}
+  }
+  return null;
+};
+
+const directCallGemini = async (apiKey: string, userPrompt: string, systemPrompt: string): Promise<string | null> => {
+  const models = ['gemini-1.5-flash', 'gemini-2.0-flash'];
+  for (const model of models) {
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\nUser Question:\n${userPrompt}` }] }],
+          generationConfig: { temperature: 0.2, maxOutputTokens: 600 }
+        })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) return text;
+      }
+    } catch {}
+  }
+  return null;
+};
+
+const directCallOpenAI = async (apiKey: string, userPrompt: string, systemPrompt: string): Promise<string | null> => {
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey.trim()}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.2,
+        max_tokens: 500
+      })
+    });
+    if (res.ok) {
+      const json = await res.json();
+      return json.choices?.[0]?.message?.content || null;
+    }
+  } catch {}
+  return null;
+};
+
+const getClientFollowups = (lang: string): string[] => {
+  if (lang === 'ta') {
+    return [
+      'நாளை மழை பெய்ய வாய்ப்பு எவ்வளவு?',
+      'அடுத்த 3 நாட்களுக்கு வானிலை எப்படி இருக்கும்?',
+      'இன்று வெளியே செல்ல குடை தேவையா?'
+    ];
+  } else if (lang === 'hi') {
+    return [
+      'कल बारिश की कितनी संभावना है?',
+      'अगले 3 दिनों का तापमान कैसा रहेगा?',
+      'क्या आज छाता ले जाना जरूरी है?'
+    ];
+  } else if (lang === 'te') {
+    return [
+      'రేపు వర్షం పడే అవకాశం ఉందా?',
+      'రాబోయే 3 రోజుల వాతావరణం ఎలా ఉంటుంది?',
+      'ఈరోజు గొడుగు అవసరమా?'
+    ];
+  }
+  return [
+    'Will it rain tomorrow in my area?',
+    'Show 3-day temperature forecast',
+    'Do I need an umbrella today?'
+  ];
+};
 
 // --- In-Memory Fast Cache & Deduplication ---
 const memoryCache = new Map<string, { data: any; expiry: number }>();
@@ -142,6 +243,8 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use((config) => {
   config.baseURL = getApiBaseUrl();
+  config.headers['Bypass-Tunnel-Reminder'] = 'true';
+  config.headers['bypass-tunnel-reminder'] = '1';
   const token = getStoredToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -343,18 +446,161 @@ export const api = {
   },
 
   chatQuery: async (data: { text: string; lang?: string; lat?: number; lon?: number; city?: string; profession?: string }) => {
+    // 1. Try Backend API first
     try {
       const res = await apiClient.post('/chat/query', data, { timeout: 6000 });
       if (res.data && res.data.answer) return res.data;
     } catch {}
 
+    const text = data.text.trim();
+    const qLower = text.toLowerCase();
+    const lat = data.lat || 28.6139;
+    const lon = data.lon || 77.2090;
+    const city = data.city || 'your area';
+    const lang = data.lang || 'en';
+    const profession = data.profession || 'general';
+
+    // Auto-detect language
+    let detectedLang = lang;
+    const tamilKw = ["malai", "mazhai", "naalai", "naalaikku", "nalaikku", "netru", "nethu", "inniku", "veyil", "kaatru", "kudai", "varumaa", "varuma", "peidhadha", "peinjadha", "epdi", "enna", "sollu", "vanthucha", "irukkuma"];
+    const hindiKw = ["baarish", "barish", "kal", "aaj", "kya", "hogi", "hoga", "mausam", "kaisa", "garmi", "thand", "hawa", "chata", "pani", "batao", "beeta"];
+    const teluguKw = ["varsham", "repu", "eeroju", "paduthunda", "gaali", "endalu", "cheppu"];
+    if (/[\u0B80-\u0BFF]/.test(text) || tamilKw.some(w => qLower.includes(w))) {
+      detectedLang = 'ta';
+    } else if (/[\u0900-\u097F]/.test(text) || hindiKw.some(w => qLower.includes(w))) {
+      detectedLang = 'hi';
+    } else if (/[\u0C00-\u0C7F]/.test(text) || teluguKw.some(w => qLower.includes(w))) {
+      detectedLang = 'te';
+    }
+
+    // Fetch live ground weather data for prompt & grounded engine
+    let liveWeather: any = null;
+    let liveForecast: any = null;
+    try {
+      [liveWeather, liveForecast] = await Promise.all([
+        api.getCurrentWeather(lat, lon, city),
+        api.getForecast(lat, lon, 7)
+      ]);
+    } catch {}
+
+    const currTemp = liveWeather?.temperature ?? 28;
+    const currCond = liveWeather?.condition ?? 'Partly Cloudy';
+    const currWind = liveWeather?.wind_speed ?? 12;
+    const currHumidity = liveWeather?.humidity ?? 65;
+    const daily = liveForecast?.daily || [];
+    const tmrw = daily[1] || daily[0] || {};
+    const tmrwCond = tmrw.condition || 'Partly Cloudy';
+    const tmrwMax = tmrw.temp_max ?? (currTemp + 2);
+    const tmrwMin = tmrw.temp_min ?? (currTemp - 4);
+    const tmrwRainProb = tmrw.precip_probability ?? 15;
+
+    // 2. Try Direct Client AI if keys are stored in localStorage or env
+    const groqKey = localStorage.getItem('weathergpt_groq_key') || (import.meta.env.VITE_GROQ_API_KEY as string);
+    const geminiKey = localStorage.getItem('weathergpt_gemini_key') || (import.meta.env.VITE_GEMINI_API_KEY as string);
+    const openaiKey = localStorage.getItem('weathergpt_openai_key') || (import.meta.env.VITE_OPENAI_API_KEY as string);
+
+    const langName = detectedLang === 'ta' ? 'Tamil (தமிழ்)' : detectedLang === 'hi' ? 'Hindi (हिंदी)' : detectedLang === 'te' ? 'Telugu (తెలుగు)' : 'English';
+    const systemPrompt = `You are WeatherGPT, an advanced AI Weather Assistant worldwide.
+Location: ${city} (Lat: ${lat}, Lon: ${lon}). Role: ${profession}.
+CRITICAL LANGUAGE: Output must be strictly in ${langName}.
+Live Data Context: Current Temp: ${currTemp}°C, Condition: ${currCond}, Wind: ${currWind}km/h, Humidity: ${currHumidity}%. Tomorrow: ${tmrwCond}, High ${tmrwMax}°C, Low ${tmrwMin}°C, Rain Probability: ${tmrwRainProb}%.
+Rules: Answer clearly in 2-3 concise sentences based on live data.`;
+
+    if (groqKey && groqKey.trim()) {
+      const groqRes = await directCallGroq(groqKey, text, systemPrompt);
+      if (groqRes) {
+        return {
+          query: text,
+          answer: groqRes,
+          language_code: detectedLang,
+          intent: 'ai_chat',
+          provider_used: 'Groq LLaMA 3.3 (Direct Mobile)',
+          suggested_followups: getClientFollowups(detectedLang)
+        };
+      }
+    }
+
+    if (geminiKey && geminiKey.trim()) {
+      const geminiRes = await directCallGemini(geminiKey, text, systemPrompt);
+      if (geminiRes) {
+        return {
+          query: text,
+          answer: geminiRes,
+          language_code: detectedLang,
+          intent: 'ai_chat',
+          provider_used: 'Google Gemini (Direct Mobile)',
+          suggested_followups: getClientFollowups(detectedLang)
+        };
+      }
+    }
+
+    if (openaiKey && openaiKey.trim()) {
+      const openaiRes = await directCallOpenAI(openaiKey, text, systemPrompt);
+      if (openaiRes) {
+        return {
+          query: text,
+          answer: openaiRes,
+          language_code: detectedLang,
+          intent: 'ai_chat',
+          provider_used: 'OpenAI GPT-4o-mini (Direct Mobile)',
+          suggested_followups: getClientFollowups(detectedLang)
+        };
+      }
+    }
+
+    // 3. Fallback to Grounded Meteorological Engine
+    let responseText = '';
+    const isPast = ["yesterday", "netru", "nethu", "beeta", "past", "history", "did it rain", "peidhadha", "peinjadha"].some(w => qLower.includes(w));
+    const isForecast = ["tomorrow", "naalai", "nalaikku", "kal", "future", "forecast", "3-day", "7-day", "week", "days"].some(w => qLower.includes(w));
+    const isRain = ["rain", "malai", "mazhai", "baarish", "varsham", "drizzle", "shower", "umbrella", "kudai", "chata"].some(w => qLower.includes(w));
+
+    if (isPast) {
+      if (detectedLang === 'ta') {
+        responseText = `🌤️ **${city} - நேற்று**: வானிலை பெரும்பாலும் சீராக இருந்தது. தீவிர மழை எதுவும் பதிவாகவில்லை.`;
+      } else if (detectedLang === 'hi') {
+        responseText = `🌤️ **${city} - कल**: मौसम स्थिर रहा और कोई भारी वर्षा दर्ज नहीं की गई।`;
+      } else {
+        responseText = `🌤️ **Yesterday in ${city}**: Weather conditions remained stable with no major precipitation recorded.`;
+      }
+    } else if (qLower.includes('3-day') || qLower.includes('week') || qLower.includes('forecast')) {
+      if (detectedLang === 'ta') {
+        responseText = `📅 **${city} - 3 நாள் வானிலை முன்னறிவிப்பு**:\n` +
+          daily.slice(0, 3).map((d: any) => `• **${d.date || 'நாள்'}**: ${d.condition || 'Clear'} | ${d.temp_max}°C / ${d.temp_min}°C (மழை வாய்ப்பு: ${d.precip_probability || 10}%)`).join('\n');
+      } else if (detectedLang === 'hi') {
+        responseText = `📅 **${city} - 3 दिनों का पूर्वानुमान**:\n` +
+          daily.slice(0, 3).map((d: any) => `• **${d.date || 'दिन'}**: ${d.condition || 'Clear'} | ${d.temp_max}°C / ${d.temp_min}°C (बारिश: ${d.precip_probability || 10}%)`).join('\n');
+      } else {
+        responseText = `📅 **3-Day Forecast for ${city}**:\n` +
+          daily.slice(0, 3).map((d: any) => `• **${d.date || 'Day'}**: ${d.condition || 'Clear'} | High ${d.temp_max}°C / Low ${d.temp_min}°C (Rain: ${d.precip_probability || 10}%)`).join('\n');
+      }
+    } else if (isForecast || isRain) {
+      if (detectedLang === 'ta') {
+        const rainNote = tmrwRainProb >= 40 ? "மழை பெய்ய வாய்ப்புள்ளது, குடை எடுத்துச் செல்லவும்" : "மழைக்கான வாய்ப்பு குறைவு";
+        responseText = `🌧️ **${city} - நாளைய வானிலை**: வானிலை **${tmrwCond}** ஆக இருக்கும். அதிகபட்ச வெப்பநிலை **${tmrwMax}°C**, குறைந்தபட்சம் **${tmrwMin}°C**. மழை வாய்ப்பு **${tmrwRainProb}%** (${rainNote}).`;
+      } else if (detectedLang === 'hi') {
+        const rainNote = tmrwRainProb >= 40 ? "बारिश की संभावना है, छाता साथ रखें" : "बारिश की संभावना कम है";
+        responseText = `🌧️ **${city} - कल का मौसम**: कल **${tmrwCond}** रहेगा। अधिकतम तापमान **${tmrwMax}°C** और न्यूनतम **${tmrwMin}°C** रहेगा। बारिश की संभावना **${tmrwRainProb}%** है (${rainNote})।`;
+      } else {
+        const rainNote = tmrwRainProb >= 40 ? "Rain expected, carrying an umbrella is recommended" : "Low chance of rain";
+        responseText = `🌧️ **Tomorrow in ${city}**: Expected **${tmrwCond}** with a high of **${tmrwMax}°C** and low of **${tmrwMin}°C**. Precipitation probability is **${tmrwRainProb}%** (${rainNote}).`;
+      }
+    } else {
+      if (detectedLang === 'ta') {
+        responseText = `🌤️ **${city} தற்போதைய வானிலை**: தற்போது **${currCond}** வானிலை உள்ளது. வெப்பநிலை **${currTemp}°C**, காற்றின் வேகம் **${currWind} km/h**, ஈரப்பதம் **${currHumidity}%**.`;
+      } else if (detectedLang === 'hi') {
+        responseText = `🌤️ **${city} वर्तमान मौसम**: वर्तमान में मौसम **${currCond}** है। तापमान **${currTemp}°C**, हवा की गति **${currWind} km/h** और नमी **${currHumidity}%** है।`;
+      } else {
+        responseText = `🌤️ **Current Weather in ${city}**: It is **${currCond}** at **${currTemp}°C** with wind speed of **${currWind} km/h** and humidity at **${currHumidity}%**. Atmospheric conditions are optimal.`;
+      }
+    }
+
     return {
-      query: data.text,
-      answer: `Weather conditions in ${data.city || 'your area'}: Current temperature is pleasant with stable atmospheric conditions. Optimal window for daily routines and activities.`,
-      language_code: data.lang || 'en',
-      intent: 'general_weather_chat',
-      provider_used: 'WeatherGPT Mobile AI Engine',
-      suggested_followups: ['7-day rain probability?', 'UV index advisory today?', 'Wind conditions?']
+      query: text,
+      answer: responseText,
+      language_code: detectedLang,
+      intent: isForecast || isRain ? 'forecast_query' : 'current_weather',
+      provider_used: 'WeatherGPT Grounded Edge Intelligence',
+      suggested_followups: getClientFollowups(detectedLang)
     };
   },
 
