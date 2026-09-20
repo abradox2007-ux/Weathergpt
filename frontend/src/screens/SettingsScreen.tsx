@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 import {
   Settings as SettingsIcon,
   Globe2,
@@ -434,96 +435,98 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           </div>
         </div>
 
-        {/* Section 5: Backend Server & Direct Mobile AI */}
-        <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-md shadow-slate-200/40 dark:shadow-none space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 text-cyan-600 dark:text-cyan-400 font-black text-xs">
-              <Server className="w-4 h-4" />
-              <span>Backend Server & Mobile AI</span>
-            </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
-              APK Connectivity
-            </span>
-          </div>
-
-          {/* Server URL Config */}
-          <div className="space-y-2">
-            <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-              <span>Backend API Server URL</span>
-              <span className="text-[9px] text-slate-400 font-normal">Active: {getApiBaseUrl()}</span>
-            </label>
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={serverUrl}
-                onChange={(e) => setServerUrl(e.target.value)}
-                placeholder="e.g. http://192.168.1.15:8000 or https://xyz.loca.lt"
-                className="flex-1 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-xl text-xs text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-cyan-500 shadow-xs"
-              />
-              <button
-                onClick={handleSaveServerUrl}
-                disabled={isTestingServer}
-                className="px-3 py-2 rounded-xl bg-cyan-500 text-white text-xs font-black hover:bg-cyan-600 disabled:opacity-50 transition-colors shadow-xs flex items-center space-x-1"
-              >
-                {isTestingServer ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
-                <span>Save & Test</span>
-              </button>
-            </div>
-
-            {/* Test result banner */}
-            {serverTestResult.status !== 'idle' && (
-              <div
-                className={`p-2.5 rounded-xl text-[11px] font-medium flex items-center space-x-2 animate-in fade-in ${
-                  serverTestResult.status === 'success'
-                    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                    : 'bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
-                }`}
-              >
-                {serverTestResult.status === 'success' ? (
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                ) : (
-                  <XCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                )}
-                <span>{serverTestResult.message}</span>
+        {/* Section 5: Backend Server & Direct Mobile AI (Only visible in native APK builds) */}
+        {Capacitor.isNativePlatform() && (
+          <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-md shadow-slate-200/40 dark:shadow-none space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2 text-cyan-600 dark:text-cyan-400 font-black text-xs">
+                <Server className="w-4 h-4" />
+                <span>Backend Server & Mobile AI</span>
               </div>
-            )}
-          </div>
-
-          {/* Direct Mobile AI Keys (Standalone fallback) */}
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
-            <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 font-bold text-[11px]">
-              <Key className="w-3.5 h-3.5" />
-              <span>Direct Mobile AI Keys (Works offline / standalone)</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800">
+                APK Connectivity
+              </span>
             </div>
 
+            {/* Server URL Config */}
             <div className="space-y-2">
-              <input
-                type="password"
-                value={groqKey}
-                onChange={(e) => setGroqKey(e.target.value)}
-                placeholder="Groq API Key (gsk_...)"
-                className="w-full bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-xl text-xs text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500 shadow-xs"
-              />
-              <input
-                type="password"
-                value={geminiKey}
-                onChange={(e) => setGeminiKey(e.target.value)}
-                placeholder="Google Gemini API Key (AIzaSy...)"
-                className="w-full bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-xl text-xs text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500 shadow-xs"
-              />
-              <button
-                onClick={handleSaveAiKeys}
-                className="w-full py-2 rounded-xl bg-indigo-500 text-white text-xs font-black hover:bg-indigo-600 transition-colors shadow-xs"
-              >
-                Save Direct AI Keys
-              </button>
+              <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                <span>Backend API Server URL</span>
+                <span className="text-[9px] text-slate-400 font-normal">Active: {getApiBaseUrl()}</span>
+              </label>
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={serverUrl}
+                  onChange={(e) => setServerUrl(e.target.value)}
+                  placeholder="e.g. http://192.168.1.15:8000 or https://xyz.loca.lt"
+                  className="flex-1 bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-xl text-xs text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-cyan-500 shadow-xs"
+                />
+                <button
+                  onClick={handleSaveServerUrl}
+                  disabled={isTestingServer}
+                  className="px-3 py-2 rounded-xl bg-cyan-500 text-white text-xs font-black hover:bg-cyan-600 disabled:opacity-50 transition-colors shadow-xs flex items-center space-x-1"
+                >
+                  {isTestingServer ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+                  <span>Save & Test</span>
+                </button>
+              </div>
+
+              {/* Test result banner */}
+              {serverTestResult.status !== 'idle' && (
+                <div
+                  className={`p-2.5 rounded-xl text-[11px] font-medium flex items-center space-x-2 animate-in fade-in ${
+                    serverTestResult.status === 'success'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                      : 'bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
+                  }`}
+                >
+                  {serverTestResult.status === 'success' ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  ) : (
+                    <XCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                  )}
+                  <span>{serverTestResult.message}</span>
+                </div>
+              )}
             </div>
 
-            <p className="text-[10px] text-slate-400 leading-relaxed">
-              💡 Even without a backend or keys, WeatherGPT runs on-device live meteorological intelligence for all weather queries.
-            </p>
+            {/* Direct Mobile AI Keys (Standalone fallback) */}
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
+              <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 font-bold text-[11px]">
+                <Key className="w-3.5 h-3.5" />
+                <span>Direct Mobile AI Keys (Works offline / standalone)</span>
+              </div>
+
+              <div className="space-y-2">
+                <input
+                  type="password"
+                  value={groqKey}
+                  onChange={(e) => setGroqKey(e.target.value)}
+                  placeholder="Groq API Key (gsk_...)"
+                  className="w-full bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-xl text-xs text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500 shadow-xs"
+                />
+                <input
+                  type="password"
+                  value={geminiKey}
+                  onChange={(e) => setGeminiKey(e.target.value)}
+                  placeholder="Google Gemini API Key (AIzaSy...)"
+                  className="w-full bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-xl text-xs text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-indigo-500 shadow-xs"
+                />
+                <button
+                  onClick={handleSaveAiKeys}
+                  className="w-full py-2 rounded-xl bg-indigo-500 text-white text-xs font-black hover:bg-indigo-600 transition-colors shadow-xs"
+                >
+                  Save Direct AI Keys
+                </button>
+              </div>
+
+              <p className="text-[10px] text-slate-400 leading-relaxed">
+                💡 Even without a backend or keys, WeatherGPT runs on-device live meteorological intelligence for all weather queries.
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Reset Onboarding Walkthrough */}
         <button

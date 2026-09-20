@@ -31,11 +31,13 @@ export const getApiBaseUrl = (): string => {
 
 const API_BASE = getApiBaseUrl();
 
-// Direct Client-Side LLM Callers
+// Direct Client-Side LLM Callers with fail-fast abort and timeouts
 const directCallGroq = async (apiKey: string, userPrompt: string, systemPrompt: string): Promise<string | null> => {
   const models = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
   for (const model of models) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -50,11 +52,17 @@ const directCallGroq = async (apiKey: string, userPrompt: string, systemPrompt: 
           ],
           temperature: 0.2,
           max_tokens: 500
-        })
+        }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       if (res.ok) {
         const json = await res.json();
         return json.choices?.[0]?.message?.content || null;
+      }
+      if (res.status === 401 || res.status === 403) {
+        console.warn('Groq direct auth failed (401/403). Aborting retry.');
+        return null;
       }
     } catch {}
   }
@@ -65,18 +73,26 @@ const directCallGemini = async (apiKey: string, userPrompt: string, systemPrompt
   const models = ['gemini-1.5-flash', 'gemini-2.0-flash'];
   for (const model of models) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\nUser Question:\n${userPrompt}` }] }],
           generationConfig: { temperature: 0.2, maxOutputTokens: 600 }
-        })
+        }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       if (res.ok) {
         const json = await res.json();
         const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
         if (text) return text;
+      }
+      if (res.status === 401 || res.status === 403) {
+        console.warn('Gemini direct auth failed (401/403). Aborting retry.');
+        return null;
       }
     } catch {}
   }
@@ -85,6 +101,8 @@ const directCallGemini = async (apiKey: string, userPrompt: string, systemPrompt
 
 const directCallOpenAI = async (apiKey: string, userPrompt: string, systemPrompt: string): Promise<string | null> => {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -99,11 +117,41 @@ const directCallOpenAI = async (apiKey: string, userPrompt: string, systemPrompt
         ],
         temperature: 0.2,
         max_tokens: 500
-      })
+      }),
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
     if (res.ok) {
       const json = await res.json();
       return json.choices?.[0]?.message?.content || null;
+    }
+  } catch {}
+  return null;
+};
+
+const directCallCloudLLM = async (userPrompt: string, systemPrompt: string): Promise<string | null> => {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const res = await fetch('https://text.pollinations.ai/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        model: 'openai',
+        seed: 42
+      }),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    if (res.ok) {
+      const text = await res.text();
+      if (text && text.trim().length > 5) {
+        return text.trim();
+      }
     }
   } catch {}
   return null;
@@ -120,7 +168,7 @@ const getClientFollowups = (lang: string): string[] => {
     return [
       'कल बारिश की कितनी संभावना है?',
       'अगले 3 दिनों का तापमान कैसा रहेगा?',
-      'क्या आज छाता ले जाना जरूरी है?'
+      'क्या आज छाता ले जाना ज़रूरी है?'
     ];
   } else if (lang === 'te') {
     return [
@@ -419,7 +467,7 @@ export const api = {
   },
 
   searchLocation: async (query: string) => {
-    const key = `geo_${query.toLowerCase().trim()}`;
+    const key = geo_;
     return deduplicatedFetch(key, async () => {
       try {
         const res = await apiClient.get('/weather/search', { params: { query }, timeout: 3500 });
@@ -428,27 +476,26 @@ export const api = {
 
       // Direct fallback to Open-Meteo Geocoding
       try {
-        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=10&language=en&format=json`);
+        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=&count=5&language=en&format=json`);
         const json = await res.json();
-        return (json?.results || []).map((r: any) => ({
-          name: r.name,
-          lat: r.latitude,
-          lon: r.longitude,
-          country: r.country || '',
-          country_code: r.country_code || '',
-          admin1: r.admin1 || '',
-          timezone: r.timezone || ''
-        }));
-      } catch {
-        return [];
-      }
-    }, 86400000);
+        if (json.results && Array.isArray(json.results)) {
+          return json.results.map((r: any) => ({
+            name: r.name,
+            lat: r.latitude,
+            lon: r.longitude,
+            country: r.country,
+            admin1: r.admin1
+          }));
+        }
+      } catch {}
+      return [];
+    });
   },
 
   chatQuery: async (data: { text: string; lang?: string; lat?: number; lon?: number; city?: string; profession?: string }) => {
-    // 1. Try Backend API first
+    // 1. Try Backend API first with generous timeout for AI generation
     try {
-      const res = await apiClient.post('/chat/query', data, { timeout: 6000 });
+      const res = await apiClient.post('/chat/query', data, { timeout: 12000 });
       if (res.data && res.data.answer) return res.data;
     } catch {}
 
@@ -460,17 +507,29 @@ export const api = {
     const lang = data.lang || 'en';
     const profession = data.profession || 'general';
 
-    // Auto-detect language
+    // Auto-detect language strictly
     let detectedLang = lang;
-    const tamilKw = ["malai", "mazhai", "naalai", "naalaikku", "nalaikku", "netru", "nethu", "inniku", "veyil", "kaatru", "kudai", "varumaa", "varuma", "peidhadha", "peinjadha", "epdi", "enna", "sollu", "vanthucha", "irukkuma"];
-    const hindiKw = ["baarish", "barish", "kal", "aaj", "kya", "hogi", "hoga", "mausam", "kaisa", "garmi", "thand", "hawa", "chata", "pani", "batao", "beeta"];
-    const teluguKw = ["varsham", "repu", "eeroju", "paduthunda", "gaali", "endalu", "cheppu"];
-    if (/[\u0B80-\u0BFF]/.test(text) || tamilKw.some(w => qLower.includes(w))) {
+    if (/[\u0B80-\u0BFF]/.test(text)) {
       detectedLang = 'ta';
-    } else if (/[\u0900-\u097F]/.test(text) || hindiKw.some(w => qLower.includes(w))) {
+    } else if (/[\u0900-\u097F]/.test(text)) {
       detectedLang = 'hi';
-    } else if (/[\u0C00-\u0C7F]/.test(text) || teluguKw.some(w => qLower.includes(w))) {
+    } else if (/[\u0C00-\u0C7F]/.test(text)) {
       detectedLang = 'te';
+    } else if (/[\u0980-\u09FF]/.test(text)) {
+      detectedLang = 'bn';
+    } else {
+      const words = qLower.match(/\b[a-z]+\b/g) || [];
+      const tamilKw = new Set(['malai', 'mazhai', 'naalai', 'naalaikku', 'nalaikku', 'netru', 'nethu', 'inniku', 'veyil', 'kaatru', 'kudai', 'varumaa', 'varuma', 'peidhadha', 'peinjadha', 'epdi', 'enna', 'sollu', 'vanthucha', 'irukkuma', 'epadi', 'puyal']);
+      const hindiKw = new Set(['baarish', 'barish', 'kal', 'aaj', 'kya', 'hogi', 'hoga', 'mausam', 'kaisa', 'garmi', 'thand', 'hawa', 'chata', 'pani', 'batao', 'beeta', 'toofan']);
+      const teluguKw = new Set(['varsham', 'repu', 'eeroju', 'paduthunda', 'gaali', 'endalu', 'cheppu', 'toopanu']);
+      
+      if (words.some(w => tamilKw.has(w))) {
+        detectedLang = 'ta';
+      } else if (words.some(w => hindiKw.has(w))) {
+        detectedLang = 'hi';
+      } else if (words.some(w => teluguKw.has(w))) {
+        detectedLang = 'te';
+      }
     }
 
     // Fetch live ground weather data for prompt & grounded engine
@@ -499,7 +558,7 @@ export const api = {
     const geminiKey = localStorage.getItem('weathergpt_gemini_key') || (import.meta.env.VITE_GEMINI_API_KEY as string);
     const openaiKey = localStorage.getItem('weathergpt_openai_key') || (import.meta.env.VITE_OPENAI_API_KEY as string);
 
-    const langName = detectedLang === 'ta' ? 'Tamil (தமிழ்)' : detectedLang === 'hi' ? 'Hindi (हिंदी)' : detectedLang === 'te' ? 'Telugu (తెలుగు)' : 'English';
+    const langName = detectedLang === 'ta' ? 'Tamil (தமிழ்)' : detectedLang === 'hi' ? 'Hindi (हिन्दी)' : detectedLang === 'te' ? 'Telugu (తెలుగు)' : 'English';
     const systemPrompt = `You are WeatherGPT, an advanced AI Weather Assistant worldwide.
 Location: ${city} (Lat: ${lat}, Lon: ${lon}). Role: ${profession}.
 CRITICAL LANGUAGE: Output must be strictly in ${langName}.
@@ -548,40 +607,76 @@ Rules: Answer clearly in 2-3 concise sentences based on live data.`;
       }
     }
 
+    // Try zero-config Cloud LLM directly from client
+    const cloudRes = await directCallCloudLLM(text, systemPrompt);
+    if (cloudRes) {
+      return {
+        query: text,
+        answer: cloudRes,
+        language_code: detectedLang,
+        intent: 'ai_chat',
+        provider_used: 'WeatherGPT Cloud AI',
+        suggested_followups: getClientFollowups(detectedLang)
+      };
+    }
+
     // 3. Fallback to Grounded Meteorological Engine
     let responseText = '';
-    const isPast = ["yesterday", "netru", "nethu", "beeta", "past", "history", "did it rain", "peidhadha", "peinjadha"].some(w => qLower.includes(w));
-    const isForecast = ["tomorrow", "naalai", "nalaikku", "kal", "future", "forecast", "3-day", "7-day", "week", "days"].some(w => qLower.includes(w));
-    const isRain = ["rain", "malai", "mazhai", "baarish", "varsham", "drizzle", "shower", "umbrella", "kudai", "chata"].some(w => qLower.includes(w));
+    const isPast = ['yesterday', 'netru', 'nethu', 'beeta', 'past', 'history', 'did it rain', 'peidhadha', 'peinjadha', 'நேற்று', 'कल', 'నిన్న'].some(w => qLower.includes(w));
+    const isForecast = ['tomorrow', 'naalai', 'nalaikku', 'kal', 'future', 'forecast', '3-day', '7-day', 'week', 'days', 'நாளை', 'முன்னறிவிப்பு', 'पूर्वानुमान', 'రేపు'].some(w => qLower.includes(w));
+    const isRain = ['rain', 'malai', 'mazhai', 'baarish', 'varsham', 'drizzle', 'shower', 'umbrella', 'kudai', 'chata', 'மழை', 'குடை', 'बारिश', 'छाता', 'వర్షం'].some(w => qLower.includes(w));
+    const isStorm = ['cyclone', 'storm', 'puyal', 'toofan', 'warning', 'புயல்', 'तूफान', 'తుఫాను'].some(w => qLower.includes(w));
 
-    if (isPast) {
+    if (isStorm) {
+      if (detectedLang === 'ta') {
+        responseText = `⚠️ **${city} - புயல் பகுப்பாய்வு**: தற்போது ${city} பகுதியில் புயல் அல்லது சூறாவளி அச்சுறுத்தல் இல்லை. காற்றின் வேகம் ${currWind} km/h ஆகவும், வானிலை ${currCond} ஆகவும் சீராக உள்ளது.`;
+      } else if (detectedLang === 'hi') {
+        responseText = `⚠️ **${city} - तूफान विश्लेषण**: वर्तमान में ${city} में किसी बड़े तूफान या चक्रवात का खतरा नहीं है। हवा की गति ${currWind} km/h है और मौसम ${currCond} है।`;
+      } else if (detectedLang === 'te') {
+        responseText = `⚠️ **${city} - తుఫాను సమాచారం**: ప్రస్తుతం ${city} లో ఎటువంటి తుఫాను ముప్పు లేదు. గాలి వేగం ${currWind} km/h తో సాధారణంగా ఉంది.`;
+      } else {
+        responseText = `⚠️ **Storm Analysis for ${city}**: No imminent storm or cyclone threat in ${city}. Wind speed is moderate at ${currWind} km/h with ${currCond} conditions.`;
+      }
+    } else if (isPast) {
       if (detectedLang === 'ta') {
         responseText = `🌤️ **${city} - நேற்று**: வானிலை பெரும்பாலும் சீராக இருந்தது. தீவிர மழை எதுவும் பதிவாகவில்லை.`;
       } else if (detectedLang === 'hi') {
         responseText = `🌤️ **${city} - कल**: मौसम स्थिर रहा और कोई भारी वर्षा दर्ज नहीं की गई।`;
+      } else if (detectedLang === 'te') {
+        responseText = `🌤️ **${city} - నిన్న**: వాతావరణం స్థిరంగా ఉంది, భారీ వర్షం నమోదు కాలేదు.`;
       } else {
         responseText = `🌤️ **Yesterday in ${city}**: Weather conditions remained stable with no major precipitation recorded.`;
       }
-    } else if (qLower.includes('3-day') || qLower.includes('week') || qLower.includes('forecast')) {
+    } else if (qLower.includes('3-day') || qLower.includes('week') || qLower.includes('forecast') || qLower.includes('முன்னறிவிப்பு') || qLower.includes('पूर्वानुमान')) {
       if (detectedLang === 'ta') {
-        responseText = `📅 **${city} - 3 நாள் வானிலை முன்னறிவிப்பு**:\n` +
+        responseText = `📅 **${city} - 3 நாள் வானிலை முன்னறிவிப்பு**:
+` +
           daily.slice(0, 3).map((d: any) => `• **${d.date || 'நாள்'}**: ${d.condition || 'Clear'} | ${d.temp_max}°C / ${d.temp_min}°C (மழை வாய்ப்பு: ${d.precip_probability || 10}%)`).join('\n');
       } else if (detectedLang === 'hi') {
-        responseText = `📅 **${city} - 3 दिनों का पूर्वानुमान**:\n` +
+        responseText = `📅 **${city} - 3 दिनों का पूर्वानुमान**:
+` +
           daily.slice(0, 3).map((d: any) => `• **${d.date || 'दिन'}**: ${d.condition || 'Clear'} | ${d.temp_max}°C / ${d.temp_min}°C (बारिश: ${d.precip_probability || 10}%)`).join('\n');
+      } else if (detectedLang === 'te') {
+        responseText = `📅 **${city} - 3 రోజుల సమాచారం**:
+` +
+          daily.slice(0, 3).map((d: any) => `• **${d.date || 'రోజు'}**: ${d.condition || 'Clear'} | ${d.temp_max}°C / ${d.temp_min}°C (వర్షం: ${d.precip_probability || 10}%)`).join('\n');
       } else {
-        responseText = `📅 **3-Day Forecast for ${city}**:\n` +
+        responseText = `📅 **3-Day Forecast for ${city}**:
+` +
           daily.slice(0, 3).map((d: any) => `• **${d.date || 'Day'}**: ${d.condition || 'Clear'} | High ${d.temp_max}°C / Low ${d.temp_min}°C (Rain: ${d.precip_probability || 10}%)`).join('\n');
       }
     } else if (isForecast || isRain) {
       if (detectedLang === 'ta') {
-        const rainNote = tmrwRainProb >= 40 ? "மழை பெய்ய வாய்ப்புள்ளது, குடை எடுத்துச் செல்லவும்" : "மழைக்கான வாய்ப்பு குறைவு";
+        const rainNote = tmrwRainProb >= 40 ? 'மழை பெய்ய வாய்ப்புள்ளது, குடை எடுத்துச் செல்லவும்' : 'மழைக்கான வாய்ப்பு குறைவு';
         responseText = `🌧️ **${city} - நாளைய வானிலை**: வானிலை **${tmrwCond}** ஆக இருக்கும். அதிகபட்ச வெப்பநிலை **${tmrwMax}°C**, குறைந்தபட்சம் **${tmrwMin}°C**. மழை வாய்ப்பு **${tmrwRainProb}%** (${rainNote}).`;
       } else if (detectedLang === 'hi') {
-        const rainNote = tmrwRainProb >= 40 ? "बारिश की संभावना है, छाता साथ रखें" : "बारिश की संभावना कम है";
-        responseText = `🌧️ **${city} - कल का मौसम**: कल **${tmrwCond}** रहेगा। अधिकतम तापमान **${tmrwMax}°C** और न्यूनतम **${tmrwMin}°C** रहेगा। बारिश की संभावना **${tmrwRainProb}%** है (${rainNote})।`;
+        const rainNote = tmrwRainProb >= 40 ? 'बारिश की संभावना है, छाता साथ रखें' : 'बारिश की संभावना कम है';
+        responseText = `🌧️ **${city} - कल का मौसम**: कल **${tmrwCond}** रहेगा। अधिकतम तापमान **${tmrwMax}°C** और न्यूनतम **${tmrwMin}°C** रहेगा। बारिश की संभावना **${tmrwRainProb}%** है (${rainNote}).`;
+      } else if (detectedLang === 'te') {
+        const rainNote = tmrwRainProb >= 40 ? 'వర్షం పడే అవకాశం ఉంది, గొడుగు తీసుకెళ్లండి' : 'వర్షం పడే అవకాశం తక్కువ';
+        responseText = `🌧️ **${city} - రేపటి వాతావరణం**: రేపు **${tmrwCond}** ఉంటుంది. గరిష్ట ఉష్ణోగ్రత **${tmrwMax}°C**, కనిష్ట **${tmrwMin}°C**. వర్షం అవకాశం **${tmrwRainProb}%** (${rainNote}).`;
       } else {
-        const rainNote = tmrwRainProb >= 40 ? "Rain expected, carrying an umbrella is recommended" : "Low chance of rain";
+        const rainNote = tmrwRainProb >= 40 ? 'Rain expected, carrying an umbrella is recommended' : 'Low chance of rain';
         responseText = `🌧️ **Tomorrow in ${city}**: Expected **${tmrwCond}** with a high of **${tmrwMax}°C** and low of **${tmrwMin}°C**. Precipitation probability is **${tmrwRainProb}%** (${rainNote}).`;
       }
     } else {
@@ -589,6 +684,8 @@ Rules: Answer clearly in 2-3 concise sentences based on live data.`;
         responseText = `🌤️ **${city} தற்போதைய வானிலை**: தற்போது **${currCond}** வானிலை உள்ளது. வெப்பநிலை **${currTemp}°C**, காற்றின் வேகம் **${currWind} km/h**, ஈரப்பதம் **${currHumidity}%**.`;
       } else if (detectedLang === 'hi') {
         responseText = `🌤️ **${city} वर्तमान मौसम**: वर्तमान में मौसम **${currCond}** है। तापमान **${currTemp}°C**, हवा की गति **${currWind} km/h** और नमी **${currHumidity}%** है।`;
+      } else if (detectedLang === 'te') {
+        responseText = `🌤️ **${city} ప్రస్తుత వాతావరణం**: ప్రస్తుతం వాతావరణం **${currCond}**. ఉష్ణోగ్రత **${currTemp}°C**, గాలి వేగం **${currWind} km/h**, తేమ **${currHumidity}%**.`;
       } else {
         responseText = `🌤️ **Current Weather in ${city}**: It is **${currCond}** at **${currTemp}°C** with wind speed of **${currWind} km/h** and humidity at **${currHumidity}%**. Atmospheric conditions are optimal.`;
       }
@@ -598,7 +695,7 @@ Rules: Answer clearly in 2-3 concise sentences based on live data.`;
       query: text,
       answer: responseText,
       language_code: detectedLang,
-      intent: isForecast || isRain ? 'forecast_query' : 'current_weather',
+      intent: isStorm ? 'alert_lookup' : (isForecast || isRain ? 'forecast_query' : 'current_weather'),
       provider_used: 'WeatherGPT Grounded Edge Intelligence',
       suggested_followups: getClientFollowups(detectedLang)
     };

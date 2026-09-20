@@ -69,13 +69,20 @@ class WeatherService:
         
         # High-performance persistent HTTP connection pool
         self._client: Optional[httpx.AsyncClient] = None
+        self._client_loop: Optional[Any] = None
 
     def _get_client(self) -> httpx.AsyncClient:
-        if self._client is None or self._client.is_closed:
+        try:
+            current_loop = asyncio.get_running_loop()
+        except RuntimeError:
+            current_loop = None
+
+        if self._client is None or self._client.is_closed or self._client_loop != current_loop:
             self._client = httpx.AsyncClient(
                 limits=httpx.Limits(max_keepalive_connections=30, max_connections=100),
                 timeout=httpx.Timeout(5.0, connect=3.0)
             )
+            self._client_loop = current_loop
         return self._client
 
     def _cache_key(self, lat: float, lon: float, extra: str = "") -> str:
